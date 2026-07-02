@@ -1,6 +1,10 @@
-# prospective_final_decision_template.md — 最終判定(現状 + データ到着後テンプレート)
+# prospective_final_decision_template.md — 最終判定テンプレート
 
-## 現時点の判定(2026-07-02、MT5実データ未到着)
+> **注記(2026-07-03)**: June-2026 bundle が到着・取り込み済み。確定した判定は
+> **prospective_final_decision.md**(decision_class = PREHEDGE_SLOPE_SIGNAL_MORE_DATA_REQUIRED)
+> を正とする。本テンプレートは手順の記録として保持する。
+
+## (旧)データ到着前の判定(2026-07-02、参考)
 
 **decision_class: PROSPECTIVE_INGESTION_PIPELINE_READY_WITH_DATA_PENDING**
 

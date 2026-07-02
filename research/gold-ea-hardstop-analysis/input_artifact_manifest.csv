@@ -1,0 +1,13 @@
+artifact_id,artifact_name,expected_type,role,expected_row_count,status,sha256,source_of_truth,notes
+ART01,EA source (.mq5),MQL5 source,現行EAロジックの正本,NA,MISSING_IN_WORKSPACE,NOT_AVAILABLE,user workspace (MT5 environment),SHA記録不能。配置後にSHA256を記録すること
+ART02,EA compiled (.ex5),EX5 binary,テスター実行バイナリ,NA,MISSING_IN_WORKSPACE,NOT_AVAILABLE,user workspace (MT5 environment),source SHAとのペア照合が必要
+ART03,Phase 1 Shadow Fix Audit,report/log,非介入性検証記録(6/6 PASS x3系統),NA,MISSING_IN_WORKSPACE,NOT_AVAILABLE,prior session output,decision_class=MULTILAYER_PHASE1_SHADOW_IMPLEMENTATION_VERIFIED
+ART04,Phase 1 Runtime Snapshot CSV,CSV,root snapshot時系列(MA availability結合の基盤),169305,MISSING_IN_WORKSPACE,NOT_AVAILABLE,prior session output,期待169305行 / schema violation 0
+ART05,Basket Summary CSV,CSV,Basket master(442 Basket / final P/L / close reason),442,MISSING_IN_WORKSPACE,NOT_AVAILABLE,prior session output,closed 439 / unresolved 3
+ART06,MA Cross Audit CSV,CSV,M5/M15/M30 EMA10-SMA20クロス監査,NA,MISSING_IN_WORKSPACE,NOT_AVAILABLE,prior session output,442/442結合済みと報告
+ART07,Event Blackout Audit,CSV/report,Event Window重なり監査,NA,MISSING_IN_WORKSPACE,NOT_AVAILABLE,prior session output,EA NewsBlockとの突合に必要
+ART08,Basket Payoff Structure Audit,CSV/report,勝ち頭打ち+352円/負け左裾の構造監査,NA,MISSING_IN_WORKSPACE,NOT_AVAILABLE,prior session output,Winner Extension判断の基礎
+ART09,HardStop basket extract,derived CSV,HardStop 37件の抽出(Hedged 26 / Non-Hedged 11),37,MISSING_IN_WORKSPACE,NOT_AVAILABLE,derivable from ART04+ART05,Phase B充填のブロッカー
+ART10,HTE/Recovery/BasketClose extract,derived CSV,既存Close経路別Basket抽出,NA,MISSING_IN_WORKSPACE,NOT_AVAILABLE,derivable from ART05,kill判定の分母
+ART11,Winner basket extract,derived CSV,勝ちBasket 391件抽出,391,MISSING_IN_WORKSPACE,NOT_AVAILABLE,derivable from ART05,truncation監査の分母
+ART12,M5/M15/M30 bar data (closed bars),OHLC data,Offline Overlay再計算用バーデータ,NA,MISSING_IN_WORKSPACE,NOT_AVAILABLE,broker/tester export,2024 M1をreal tickとして扱わないこと

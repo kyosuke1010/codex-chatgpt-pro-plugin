@@ -61,6 +61,24 @@ UNKNOWNはUNKNOWNのまま扱う(false/0扱いしない)。
 Basket単位の行データを本workspaceで生成することは捏造にあたるため行わない。
 これはタスクの禁止事項(in-sample結果の偽装、UNKNOWNのfalse扱い)の遵守である。
 
+## 4.6. 更新(2026-07-02 追記2): 取り込み完了・Basket単位再計算完了
+
+input_artifacts/ に9成果物+SHA manifestが到着。ingest_verify.py により
+SHA照合(9/9 OK)・ZIP展開・CSV再発見(180ファイル目録化)・期待値照合
+(Snapshot 169,305 / Basket 442 / RunSummary 6 / HardStop 37 全MATCH)を完了。
+fill_phase_bfg.py により前回ゼロ行だったPhase B/F/G CSVを全充填:
+
+- hardstop_root_cause_rebuild.csv: 37行(M15結合29/37、event結合37/37)
+- ma_one_step_effect_rebuild.csv: 364行(恒等式違反0件)
+- ma_hardstop_rescue_vs_harm.csv: 141行
+- ma_winner_truncation.csv: 176行(eventual-winner kill定義)
+- ma_hte_recovery_basketclose_kill.csv: 182行
+- future_candidate_decision_table.csv: 364行(snapshot join 333/333)
+
+EA source SHA: e57be003...(ART01)/ EX5 SHA: 49b31402...(ART02)。
+EA source / EX5 は読み取り専用として保管し、一切変更していない。
+主要確定事実は final_research_decision.md / hardstop_research_priority.md を参照。
+
 ## 4.5. 更新(2026-07-02 追記): 成果物の所在確認
 
 ユーザーより、全入力成果物がWindowsローカル

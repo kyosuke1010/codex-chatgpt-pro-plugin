@@ -1,7 +1,7 @@
 # current_ea_risk_summary.md
 
-データ出典: SESSION_REPORTED_AGGREGATE(タスク指示 セクション0)。
-本workspaceでの独立再計算は入力成果物不在のため未実施。数値は報告値の転記であり、
+データ出典: INGESTED_RECOMPUTED_20260702(input_artifacts/ 取り込み後にBasket単位で
+独立再計算済み。Hedged 26/-130,403円・Non-Hedged 11/-54,275円は報告値と完全一致)。
 本文書は「本番期待利益」をいかなる意味でも主張しない。
 
 ## 1. 現行EAがなぜ負けているか(構造)
@@ -24,12 +24,14 @@
 
 ## 2. HardStop左裾の内訳と含意
 
-- Hedged HardStop 26件が最大の損失源。Hedgeが発動してもなおHardStopへ到達している。
-  つまり「Hedgeが遅い」「Hedge後にgivebackが発生する」のいずれか(または両方)が疑われるが、
-  その切り分けはBasket単位の時系列(hedge time / P/L at hedge / post-hedge best recovery)が
-  必要であり、本workspaceでは再計算不能(hardstop_root_cause_rebuild.csv スキーマ参照)。
-- Non-Hedged HardStop 11件はHedgeに入る前に終わっている。Pre-Hedge警告
-  (M15逆クロスは11件中7件で事前Signalあり)の活用余地がある。
+- **確定(Phase B充填済み)**: Hedged HardStop 26件は全件
+  LOSS_DOMINANT_BEFORE_HEDGE(|loss_before_hedge| >= |loss_after_hedge|)。
+  「Hedge後giveback」ではなく、**Hedge発動前の損傷が主因**。
+  したがってレバーの本丸はPre-Hedge Damage Control。
+- Non-Hedged HardStop 11件はHedgeに入る前に終わっている(M15単独の事前Signalは3/11、
+  いずれかのTFで7/11、M5は5/11)。
+- 警告なし急落型4件 / -29,439円(gross lossの14.6%)は全候補・全TFで事前Signalなし、
+  全件Event Window外。closed-bar MA系では構造的に救えない残余。
 
 ## 3. TA9だけでは足りない理由
 
@@ -41,14 +43,31 @@ TA9はPost-Hedge損失圧縮候補であり、対象はHedged HardStopのHedge�
 - したがってTA9は左裾対策の一部品であり、単独では根本対策として不足
   (既知判断と整合)。
 
-## 4. MA観測の現状評価(既報告値)
+## 4. MA観測の現状評価(再計算済み・全候補)
 
-- M15逆クロスはHardStop 37件中29件を事前カバー(coverage 78.4%)。
-- rescue local diagnostic +63,961円 vs HTE Kill -20円(1件)、Winner truncation 0件。
-- best overlay候補(M30 regime + M15 cross + M5 pullback)one-step効果 +29,585円、
-  harm/gross benefit 0.049。
-- ただしこれは **in-sample one-step Basket診断** であり、実装後利益でもOOS効果でもない。
-  full EA counterfactual(そのBasketを消した後の後続Basket連鎖の変化)は主張できない。
+ma_candidate_comparison.csv と本repo再計算(ma_one_step_effect_rebuild.csv 364行、
+one-step恒等式違反0件)より:
+
+| 候補 | coverage | rescue | BC Kill | 合計 | harm/gross | 正run |
+|---|---|---|---|---|---|---|
+| M15素 | 29/37 | +63,961 | **-56,597** | +17,141 | 0.768 | 4/6 |
+| M15+M30 adverse | 26/37 | +28,087 | -7,874 | +25,560 | 0.236 | 6/6 |
+| combo(M30+M15+M5) | 26/37 | +27,895 | -1,527 | +29,585 | 0.049 | 6/6 |
+| M15+M5 proxy | 27/37 | +39,097 | -19,000 | +28,274 | 0.402 | 4/6 |
+| M5単独 | 31/37 | +85,598 | -122,326 | **-16,778** | 1.159 | 3/6 |
+| M30 entry mismatch | 2/37 | +6,172 | -14,802 | -8,630 | 2.398 | 1/6 |
+
+- 「rescue +63,961円」はM15素の救済側のみの値であり、同じ条件でBasketClose勝ち
+  (平均+400円前後×26件)を大量に切るため、**素のM15 Exitは成立しない**。
+- combo(+29,585円はcensored込み、censored除外では+26,395円)が唯一
+  harm/gross 5%未満かつ6/6run正だが、**post-hedge only比率0.94**であり
+  Pre-Hedge損傷制御には使えない。
+- 「Winner truncation 0件」の定義は「Signal時点で含み益だった勝ちBasketの切り捨てが0件」。
+  Signal時点は含み損でその後回復して勝ったBasketのkillは26件(M15素)存在し、
+  それがBC Kill -56,597円の実体である。
+- HTE Kill 1件/-20円はHTE_BECAME_ELIGIBLE_LATER型(hte_kill_trace.md)。
+- ただしこれらはすべて **in-sample one-step Basket診断** であり、実装後利益でも
+  OOS効果でもない。full EA counterfactualは主張できない。
 
 ## 5. リスク上の注意
 

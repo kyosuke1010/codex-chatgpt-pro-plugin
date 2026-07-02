@@ -1,113 +1,111 @@
-# final_research_decision.md — 最終研究判定
+# final_research_decision.md — 最終研究判定(INGESTED版・改訂2)
 
-date: 2026-07-02
+date: 2026-07-02(input_artifacts取り込み・Basket単位再計算後に改訂)
 branch: claude/gold-ea-hardstop-analysis-9aee82
 
 ## 判定
 
 **decision_class: M15_REVERSE_CROSS_EXIT_NOT_READY_SHADOW_ONLY**
 
-付帯ステータス:
-- workspace_data_status: **INPUT_ARTIFACTS_MISSING_IN_WORKSPACE**
-  (Phase B/F/GのBasket単位再計算はMORE_DATA_REQUIRED状態。
-  本判定はタスク指示に含まれるSESSION_REPORTED_AGGREGATEを前提とする)
-- 選定された最小実装候補: 候補A — M15 Reverse Cross Shadow Phase 2
-  (selected_next_design_freeze.md、実Exitなし、Offline Overlay継続)
-- 実装許可: なし(implementation_not_allowed_statement.md)
+副判定: **PREHEDGE_DAMAGE_CONTROL_SHADOW_READY**
+(Phase B充填により、Hedged HardStop 26件全件がLOSS_DOMINANT_BEFORE_HEDGEと
+確定。Pre-Hedge観測は既存Snapshotフィールドのみで開始可能)
 
-## 判定根拠(必須15項目)
+- workspace_data_status: **INGESTED_VERIFIED**(9成果物SHA照合OK、
+  Snapshot 169,305 / Basket 442 / RunSummary 6 / HardStop 37 すべて期待値一致)
+- 再計算整合: rescue 29件/+63,961円、HTE Kill 1件/-20円、Hedged -130,403円、
+  Non-Hedged -54,275円 — 報告値と完全一致。one-step恒等式違反0件。
+- 選定候補: M15 Reverse Cross Shadow Phase 2(実Exitなし・Offline Overlay継続)。
+  Pre-Hedge層別クエリを第一級の分析対象として含める。
+- 実装許可: なし(implementation_not_allowed_statement.md 継続有効)
+
+## 判定根拠(必須15項目・データ確定版)
 
 ### 1. 現行EAがなぜ負けているか
-勝率89.07%に対しpayoff ratio 0.0836(平均勝ち+352.27円 vs 平均負け-4,211.94円)。
-expectancy -146.78円/Basket。高勝率でも左裾1本(HardStop)で数十Basket分の
-勝ちが消える構造であり、勝率改善ではなく左裾圧縮が唯一の主レバー。
+勝率89.07%に対しpayoff ratio 0.0836。expectancy -146.78円/Basket。
+gross loss -202,173円の91.35%がHardStop 37件に集中(再計算一致)。
 
-### 2. HardStop左裾の主因
-gross loss -202,173円のうちHardStop 37件が-184,678円(91.35%)。
-内訳はHedged HardStop 26件/-130,403円が最大で、Hedge発動後もなお
-HardStopへ到達している。Non-Hedged 11件/約-54,275円はHedge前に終わる系。
-Hedged側の「giveback vs Hedge遅延」の切り分けはBasket単位時系列の充填待ち。
+### 2. HardStop左裾の主因(確定)
+Basket単位充填の結果: **Hedged 26件は全件、損失の過半がHedge発動前に成立**
+(LOSS_DOMINANT_BEFORE_HEDGE 26/26)。Non-Hedged 11件はHedge前に終了。
+つまり左裾の主因は「Hedge後のgiveback」ではなく**Pre-Hedge損傷**。
+残余として警告なし急落型4件/-29,439円(全件Event外、entry→HardStop 14〜105分)。
 
-### 3. TA9だけでは足りない理由
-TA9はPost-Hedge圧縮であり、(a) Non-Hedged 11件に原理的に届かず、
-(b) Hedge前に損失が支配的なBasketにも効果が薄い。左裾の約3割
-(Non-Hedged分)と、Hedged側のPre-Hedge部分が構造的に対象外。
+### 3. TA9だけでは足りない理由(強化)
+TA9はPost-Hedge圧縮だが、Phase B確定によりHedged 26件ですら損失の過半が
+Hedge前に成立している。Non-Hedged 11件には原理的に届かない。
+TA9の可動域は従来想定よりさらに小さい。
 
-### 4. M15逆クロスが有望な理由
-HardStop 37件中29件で事前Signal(coverage 78.4%)。Non-Hedged 7/11、
-Hedged Pre-Hedge 20/26と、Hedge発動前の警告として機能している。
-one-step局所診断でrescue +63,961円に対しHTE Kill -20円・Winner truncation 0件、
-best候補(M30文脈併用)でharm/gross benefit 0.049。6run全てで正、
-2 capital群で正と、run/capital依存の兆候も現時点では見えない。
+### 4. M15逆クロスが有望な理由(限定付き)
+coverage 29/37、rescue +63,961円。二峰性のリードタイム(median 8,446分/最短54.8分)
+で長期滞留型の初期警告として機能。6run中のHardStopに対する observability は高い。
 
-### 5. M15逆クロスを即Exitにできない理由
-上記はすべて**in-sample one-step Basket診断**であり、(a) 実装後利益ではない、
-(b) OOS効果ではない、(c) full EA counterfactual(救済したBasketが後続の
-Basket生成・MaxPosition・Hedge連鎖に与える影響)を主張できない、
-(d) commission NA、(e) 既存6runへの合わせ込みリスクが排除しきれない。
-よってExitではなくShadow Signalとして蓄積する。
+### 5. M15逆クロスを即Exitにできない理由(データで確定)
+素のM15はBasketClose Kill -56,597円を伴い、純効果+17,141円、harm/gross 0.768、
+正run 4/6。「救うより壊す方が大きい局面」が明確に存在する。
+harm/gross 0.049はM30+M5併用combo限定であり、そのcomboはpost-hedge only 0.94で
+Pre-Hedge目的に転用不能。さらに全数値はin-sample one-step診断であり
+full EA counterfactualを主張できない。
 
-### 6. HTE Kill 1件の扱い
--20円/1件は規模として軽微だが、サンプル1件では安全と結論しない。
-安全ゲートG8(HTE eligibility=falseかつknown)により将来実装では
-発生自体をゼロ化する設計とし、入力成果物再配置後に当該1件を
-個別トレースする(hte_kill_trace.md)。
+### 6. HTE Kill 1件の扱い(訂正済み)
+実体はHTE_BECAME_ELIGIBLE_LATER(Signal時点はeligibility=false→約2時間後にHTE成立、
+-20円)。**ゲートG8では防げない型**であることをトレースで確定し、
+旧記述(G8でゼロ化)を撤回。残余リスクとしてprospective監査対象に変更
+(hte_kill_trace.md)。
 
-### 7. Winner truncationの有無
-報告値0件。ただしこれもin-sample診断であり、prospective期間でも
-ma_winner_truncation.csv で継続監査する。0件維持が受け入れ条件。
+### 7. Winner truncationの有無(定義明確化)
+「Signal時点で含み益の勝ちの切り捨て」= 0件(ソース定義・全候補)。
+ただし「Signal時点は含み損→回復して勝ったBasketのkill」はM15素で26件/-56,597円
+存在し、これが実質的なharmの本体。両定義を成果物で分離した
+(ma_winner_truncation.csv はeventual-winner kill 176行を収録)。
 
 ### 8. M30 regimeの使い方
-単独Signalではなく**文脈フィルタ**。M15逆クロスにM30 adverse regimeを
-重ねるとrescue 26/harm 3と選択性が向上(M5 proxy併用の27/12より良い)。
-BULL/BEAR/FLAT_OR_EQUAL/UNKNOWNの4値で、UNKNOWNをFLAT扱いしない。
+文脈フィルタとして有効性がデータで確定: M15素のBC Kill -56,597円→M30併用で
+-7,874円、combo で-1,527円まで低減し、6/6run正・LOO最小+19,508〜21,050円。
+ただしpost-hedge帯に選択が偏る副作用(0.88〜0.94)を必ず併記する。
 
-### 9. M5 retest proxyの限界
-現行M5条件は本物のretest failureではなく、逆行フォロースルーの代理指標。
-正式名称をM5_REVERSE_FOLLOWTHROUGH_PROXYに固定し、harm増加傾向
-(rescue 27/harm 12)を踏まえ、単独昇格を禁止。M30文脈との併用でのみ評価。
+### 9. M5 retest proxyの限界(データで確定)
+M5単独は合計-16,778円(BC Kill -122,326円)で失格。M15+M5 proxyもharm/gross 0.402で
+M30文脈に劣後。ただしM5はcoverage 31/37・pre-hedge率0.18と観測面では最広で、
+「警告としてのみ」価値が残る。
 
-### 10. Event Windowとの関係
-MA警告なしHardStop 4件(37-33)の説明候補として観測を継続する。
-EA NewsBlockとEvent Blackout Auditの突合が未完のため、Event Stopは
-実装せず、event_window_state(IN/OUT/UNKNOWN)の記録に留める。
+### 10. Event Windowとの関係(降格)
+HardStop±60分のevent重なりは2/37(-5,931円)。警告なし4件も全件Event外。
+Event単独レバーは左裾の主因ではないとデータで確定。NewsBlock整合監査のみ継続。
 
 ### 11. Offline Overlayを第一候補にする理由
-EA変更ゼロで非介入性の実証(6/6 PASS ×3系統)を維持でき、Snapshot×外部MAで
-442/442結合済み。同一pipelineをprospective/OOSデータへ適用でき、
-in-sampleとOOSの計算系が一致する。
+EA無変更で今回の全再計算が成立した事実そのものが実証。バーデータ(ART12)も
+ART06内に確認済みで、同一pipelineをprospectiveへ延長可能。
 
 ### 12. Runtime MA telemetryを避ける理由
-過去にShadowがindicator cacheを汚染した事故があり、EA内のiMA/CopyBuffer等は
-cache状態・イベント順序を変え得る。得られる値はオフラインで既に取得可能
-であり、便益ゼロ・リスク正(indicator_cache_contamination_risk.md)。
+必要な値はすべてオフラインで取得できた(snapshot join 333/333成立)。
+indicator cache汚染リスクを負う便益がゼロ。
 
 ### 13. 次に実装するなら何をShadow化するか
-M15 Reverse Cross Shadow Phase 2(候補A)。観測スキーマがhedge_phase・
-pl_at_signal・distance_to_hardstop・eligibility群を含むため、
-Pre-Hedge Damage Control(候補B)とHedge Transition(候補C)の観測を
-同一データから層別でき、変更面積が最小。
+M15 Reverse Cross Shadow Phase 2(選定済み)に、Phase Bで確定した
+Pre-Hedge層別クエリを追加: (a) Pre-Hedge帯限定のharm再計算、
+(b) loss_slope / adverse_movement_speed による急落型4件系の観測、
+(c) persistence条件がHTE後発eligible型killと入れ違いを減らすかの検証。
 
 ### 14. まだ実Exitを実装しない理由
-第5項の理由に加え、保護契約(HTE/Recovery/BasketClose/Winner不可侵)の
-機械検証がprospectiveデータで未実施であり、安全ゲートG1〜G14の
-通過率・blocking_gates分布も未取得。実Exitはこれらの後。
+素のM15は純効果が正でもharm構造が大きく(0.768)、combo はPre-Hedge本丸に
+届かない。左裾の主レバー(Pre-Hedge Damage Control)の設計材料が
+prospectiveデータ待ちである以上、どのExitも時期尚早。
 
 ### 15. OOS / future native tick検証が必要な理由
-既存6runはin-sampleであり、診断はそのデータで最良に見えるよう
-バイアスされ得る(選択バイアス+one-step近似誤差)。また2024 M1は
-real tickではなく、外部Tickはbroker-nativeと約定・スプレッド特性が異なる。
-実運用に近い将来native tickでrescue/harm/kill/truncationの整合を
-確認するまで、いかなる効果も実装根拠にならない。
+全効果値はin-sample 6runのone-step診断。BasketClose Killの規模が
+候補条件に敏感(M15素-56,597円 vs combo-1,527円)であり、この感度は
+overfitの典型的兆候。prospective期間での再現確認なしに実装根拠にならない。
 
 ## 次のアクション(順序固定)
 
-1. 入力成果物(ART01〜ART12)を本ブランチまたは参照可能なパスへ配置
-2. Offline Overlay pipeline実装(spec準拠、決定性・監査込み)
-3. Phase B/F/G CSV充填 + HTE Kill 1件トレース + run/capital依存再確認
-4. Shadow Phase 2 prospective収集開始(EA無変更)
+1. ~~入力成果物の配置~~ 完了(SHA照合OK)
+2. ~~Phase B/F/G CSV充填・HTE Killトレース~~ 完了(本コミット)
+3. Shadow Phase 2 prospective収集開始(EA無変更・Offline Overlay延長)
+4. Pre-Hedge層別harm再計算 + 急落型slope観測の分析クエリ実装
 5. prospective整合確認後、OOS/native tick検証 → 初めてExit候補の実装設計へ
 
 ## 免責
 
 本文書のいかなる数値・判定も将来の利益を保証しない。
+全効果値はex-commission(commission NA、0埋めなし)。

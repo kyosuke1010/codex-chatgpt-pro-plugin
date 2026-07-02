@@ -8,3 +8,5 @@ SIGNAL_PERSISTED_1_BAR,PERSISTENCE,any,latch後adverse状態が1 closed bar継�
 SIGNAL_PERSISTED_2_BARS,PERSISTENCE,any,latch後adverse状態が2 closed bars継続,NONE_SHADOW_ONLY,持続性診断
 SIGNAL_PERSISTED_3_BARS,PERSISTENCE,any,latch後adverse状態が3 closed bars継続(打ち切り),NONE_SHADOW_ONLY,持続性診断上限
 SIGNAL_CENSORED,CENSORING,any,availability到達前(または持続確認前)にBasket終了,NONE_SHADOW_ONLY,効果計算から除外し件数を必ず報告
+M30_ENTRY_REGIME_MISMATCH,ENTRY_DIAGNOSTIC,M30,entry時点でM30 regimeがbasket方向とmismatch(v1.1.0追加/ingested source: M30_REGIME_MISMATCH_AT_ENTRY),NONE_SHADOW_ONLY,one-step合計-8630円。exit候補失格・entry診断のみ
+M15_REVERSE_M30_M5_COMBO,M15_REVERSE_CONTEXT,M30+M15+M5,M30 adverse regime + M15逆クロス + M5 pullback(v1.1.0追加/ingested source: M30_REGIME_PLUS_M15_CROSS_PLUS_M5_PULLBACK),NONE_SHADOW_ONLY,best候補: sum+29585円(censored除外+26395円)/harm 0.049/6run正。ただしpost-hedge only 0.94

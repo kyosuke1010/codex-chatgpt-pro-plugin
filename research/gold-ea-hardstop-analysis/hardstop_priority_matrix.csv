@@ -1,7 +1,8 @@
 segment,basket_count,total_loss_yen,share_of_gross_loss,m15_prior_signal_coverage,research_priority,primary_research_lever,data_source,notes
-HARDSTOP_ALL,37,-184678,0.9135,29_of_37,P0,left_tail_compression,SESSION_REPORTED_AGGREGATE,gross loss -202173円の91.35%
-HEDGED_HARDSTOP,26,-130403,0.6450,20_of_26_pre_hedge,P0,hedge_transition_and_giveback_observation,SESSION_REPORTED_AGGREGATE,Hedge後giveback vs Hedge遅延の切り分けはART04/ART05到着後
-NON_HEDGED_HARDSTOP,11,-54275,0.2685,7_of_11,P1,pre_hedge_damage_control_observation,SESSION_REPORTED_AGGREGATE,Hedge前に終わる系。Pre-Hedge警告の活用余地
-HARDSTOP_NO_MA_WARNING,4,UNKNOWN,UNKNOWN,0_of_4,P2,alternative_warning_research,SESSION_REPORTED_AGGREGATE,37-33=4件はどのTFの逆クロス警告も無し。金額内訳は再計算待ち
-NON_HARDSTOP_LOSERS,11,-17495,0.0865,UNKNOWN,P3,defer,DERIVED_FROM_SESSION_AGGREGATE,48-37=11件 / -202173+184678。現段階は着手しない
+HARDSTOP_ALL,37,-184678,0.9135,29_of_37,P0,left_tail_compression,INGESTED_RECOMPUTED_20260702,gross loss -202173円の91.35%。再計算で報告値と完全一致
+HEDGED_HARDSTOP,26,-130403,0.6450,20_of_26_full(M15単独では9_of_26_pre_hedge),P0,pre_hedge_damage_control,INGESTED_RECOMPUTED_20260702,26/26全件がLOSS_DOMINANT_BEFORE_HEDGE(|loss_before_hedge|>=|loss_after_hedge|)。giveback仮説よりPre-Hedge損傷が支配的
+NON_HEDGED_HARDSTOP,11,-54275,0.2685,7_of_11(いずれかTF)/3_of_11(M15単独),P1,pre_hedge_damage_control_observation,INGESTED_RECOMPUTED_20260702,Hedge前に終わる系。M5警告5/11がM15より広い
+HARDSTOP_NO_MA_WARNING,4,-29439,0.1456,0_of_4,P2,rapid_crash_research,INGESTED_RECOMPUTED_20260702,全候補で警告なし4件。全件Event Window(±60分)外。急落型(entry→HardStop 14〜105分)。M15系では構造的に救えない残余
+HARDSTOP_EVENT_PM60_OVERLAP,2,-5931,0.0293,NA,P3,event_context_observation,INGESTED_RECOMPUTED_20260702,HardStop時刻±60分にeventがあったのは37件中2件のみ。Event単独では左裾の主因ではない
+NON_HARDSTOP_LOSERS,11,-17495,0.0865,UNKNOWN,P3,defer,DERIVED_FROM_SESSION_AGGREGATE,現段階は着手しない
 WINNER_CAP_STRUCTURE,391,+352.27_avg,NA,NA,P4,winner_extension_deferred,SESSION_REPORTED_AGGREGATE,左裾圧縮の後にのみ着手

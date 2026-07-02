@@ -1,6 +1,29 @@
 # prospective_next_operator_instructions.md — MT5オペレータ手順
 
-対象: Windows + MT5 のユーザー。目的は June-2026 locked post-sample window の
+> **次に実行するのは W2 = July-2026(2026-07完結後)**。手順はJuneと完全に同じで、
+> 変更点は (a) 期間 FromDate=2026.07.01 / ToDate=2026.07.31、(b) **M5/M15/M30 バーを同梱**、
+> (c) push先が `input_artifacts/prospective_july/`。**条件・閾値・EA は一切変えない。**
+> 詳細は prospective_july_preregistration.md。以下のJune手順の日付とpush先を
+> W2用に読み替えて実行すること。
+
+## W2(July)固有の追加
+
+- 4run: `JUNE_` を `JULY_` に、FromDate=2026.07.01 / ToDate=2026.07.31 に変更するだけ
+  (Symbol=GOLD, Period=M5, Model=0, Deposit 50k/100k, OFF+ON は不変)。
+- **MA バーを必ず同梱**(prospective_expected_artifact_manifest.csv PX11 が W2 で必須):
+  ストラテジーテスターまたはエクスポートで
+  `gold_rates_M5.csv` / `gold_rates_M15.csv` / `gold_rates_M30.csv`
+  (2026-07全体をカバー、closed bar、OHLC+time)を bundle に含める。
+  これで Q2/Q4(EMA10/SMA20 の MA warning 系)が評価可能になる。MA は観測のみ。
+- push先ディレクトリ: `input_artifacts/prospective_july/`(Juneの `prospective/` と混ぜない)。
+- push後の合図: 「**July bundle push完了、取り込み実行**」。
+  `postsample_cumulative_pipeline.py` が W1+W2 を累積集計して判定する。
+
+---
+
+## (以下は共通手順。W2ではJUNE→JULY・日付・push先を上記へ読み替え)
+
+対象: Windows + MT5 のユーザー。目的は locked post-sample window の
 Shadow収集を **EA無変更** で実行し、ZIP を本ブランチへ push すること。
 
 ## 0. 大前提

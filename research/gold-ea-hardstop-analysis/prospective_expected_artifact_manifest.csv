@@ -9,5 +9,5 @@ PX07,Tester report (.htm),HTML,per run,true,MT5 tester report,run provenance / d
 PX08,Agent/Expert logs,log,per run,false,terminal/agent window logs,diagnostics,AWAITING_PUSH
 PX09,Input set (.ini),config,per run,true,Tester+TesterInputs; FromDate=2026.06.01 ToDate=2026.06.30,window/deposit/model guard,AWAITING_PUSH
 PX10,Trade Events CSV (Shadow OFF),CSV,per OFF run,true,same schema as PX06 for ML_B_SHADOW_OFF,non-intervention OFF baseline,AWAITING_PUSH
-PX11,MA Overlay bars (optional),OHLC CSV,shared,false,gold_rates_M5/M15/M30[_with_ma],offline MA overlay join,AWAITING_PUSH_OPTIONAL
+PX11,MA Overlay bars M5/M15/M30,OHLC CSV,shared,true_for_W2_July,gold_rates_M5/M15/M30[_with_ma] covering the window,offline MA overlay join enabling Q2/Q4,REQUIRED_FROM_JULY_W2
 PX12,run manifest / sha,CSV,shared,true,file,size,sha256,transfer integrity,AWAITING_PUSH

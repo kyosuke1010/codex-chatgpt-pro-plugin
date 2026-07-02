@@ -1,0 +1,26 @@
+key,value,frozen,note
+window_class,locked_post_sample_validation_window,true,not live prospective; period already complete at selection_time
+selected_window,2026-06-01 00:00:00 to 2026-06-30 23:59:59,true,inclusive human-readable
+half_open_window,[2026-06-01 00:00:00 - 2026-07-01 00:00:00),true,canonical membership test for snapshot server_time
+selection_time,2026-07-02,true,authored before any prospective result
+selection_rule,first complete calendar month strictly after in-sample cutoff,true,no result used in selection
+in_sample_cutoff,2026-05-29,true,latest ToDate among 6 in-sample runs; boundary 2026-05-30
+in_sample_range,2026-03-01 to 2026-05-29,true,overlapping MAR_MAY/APR_MAY/MAY windows
+symbol,GOLD,true,exact broker symbol from Tester config Symbol=GOLD
+timeframe,M5,true,same as Phase 1
+tester_model,0_EVERY_TICK,true,same as Phase 1 ML_C_SHADOW_ON
+deposit_1,50000,true,JPY
+deposit_2,100000,true,JPY
+leverage,1:888,true,from Tester config
+currency,JPY,true,NA
+shadow_arm_reference,ML_B_SHADOW_OFF,true,non-intervention baseline arm for June
+shadow_arm_observation,ML_C_SHADOW_ON,true,pre-hedge damage shadow collection arm for June
+ea_source_file,KOUCHA_GOLD_KIWAMI_SURVIVAL_TICK.mq5,true,read-only; must not change
+ea_source_sha256,e57be0039e54fa605adafe582b4b273381059166c9964000ffbfc033de40f03a,true,enforced by pipeline
+ea_ex5_file,KOUCHA_GOLD_KIWAMI_SURVIVAL_TICK.ex5,true,read-only; must not change
+ea_ex5_sha256,49b3140292f614723d37fb8b8af3dabaa83ad4a61c15fd328e9a201d7c9a6cdb,true,enforced by pipeline
+observation_trigger_norm3_per_min,0.05,true,record trigger only; NOT an exit condition
+forbidden_use_optimization,true,true,no parameter tuning on June results
+forbidden_use_parameter_tuning,true,true,no threshold change after seeing June
+forbidden_use_implementation_claim,true,true,no OOS/live profit claim
+future_use,VALIDATION_ONLY,true,reproduction check of in-sample hypotheses only

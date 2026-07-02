@@ -1,0 +1,7 @@
+criterion,required,observed
+prospective_hardstop_count,15,0
+nonhedged_hardstop,2,0
+hedged_hardstop,2,0
+basketclose_count,5,0
+slope_missing_rate_max,0.3,NA
+nonintervention_off_and_on_present,both,trade_files=0

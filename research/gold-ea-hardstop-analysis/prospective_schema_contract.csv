@@ -1,0 +1,15 @@
+file_role,column_group,required_columns,key_column,phase1_verified,notes
+root_snapshot,identity,schema_version;build_id;source_before_sha256;run_id;event_type;root_snapshot_id;basket_uid;symbol;period,root_snapshot_id,true,header must equal Phase1 shadow log 84-col schema
+root_snapshot,time,server_time;server_time_msc,server_time_msc,true,slope derivation time axis
+root_snapshot,pl_state,current_basket_net_pl;basket_floating_profit;floating_loss_yen;hardstop_threshold_yen;distance_to_hardstop_yen;distance_band,basket_uid,true,pre-hedge damage core
+root_snapshot,hedge_state,is_pre_hedge;is_never_hedged;hedge_count;entry_count,basket_uid,true,pre-hedge band membership
+root_snapshot,hardstop,hardstop_now_runtime;hardstop_now_snapshot,basket_uid,true,G3 gate
+root_snapshot,eligibility,current_HTE_eligibility;current_Recovery_eligibility;current_BasketClose_eligibility,basket_uid,true,G8/G9/G10; TRUE|FALSE|UNKNOWN preserved
+root_snapshot,close_priority,close_priority_ok;close_priority_blocked;pending_close_state;market_state,basket_uid,true,G4/G5/G6/G7; market_state OPEN_OR_UNKNOWN treated UNKNOWN
+root_snapshot,context,spread_points;large_candle_state;high_impact_usd_event_window_state;event_calendar_available,basket_uid,true,event stratification / spread spike proxy
+root_snapshot,slope_native,loss_slope_short;loss_slope_mid;adverse_movement_speed,basket_uid,true,EXPECTED NA in Phase1; offline-derived substitutes used
+basket_summary,identity,basket_uid;run_id;symbol;period;capital,basket_uid,true,442 in-sample; prospective count unfixed
+basket_summary,outcome,final_close_reason;net_profit;hedged;first_hedge_time;basket_start_time;basket_end_time;first_entry_direction,basket_uid,true,actual_class derivation
+run_summary,totals,run_id;event_type,run_id,true,MULTILAYER_RUN_SUMMARY 1 row per run
+trade_events,fingerprint,order/deal/time/price/volume columns per KOUCHA_GOLD_KIWAMI_TRADE_EVENTS,NA,true,OFF vs ON must be identical (non-intervention)
+input_set,tester,Expert;Symbol;Period;Model;FromDate;ToDate;Deposit;Currency;Leverage,NA,true,window/deposit/model guard values

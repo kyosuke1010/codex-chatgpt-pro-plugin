@@ -1,0 +1,7 @@
+question,hypothesis,insample_reference,prospective_result,verdict
+Q1,rapid-drop slope separation reproduces,HS_p50=0.145 OTHER_p50=0.021,AWAITING_DATA,PENDING
+Q2,pre-hedge MA warning stays harm-excess,M15=-10258 M5=-41538,AWAITING_DATA,PENDING
+Q3,slope+shrink separates shallow vs deep adverse,in-sample ~7x median gap,AWAITING_DATA,PENDING
+Q4,BC-kill vs HardStop difference,BC-kill(pre-hedge M15)=26,AWAITING_DATA,PENDING
+Q5,HTE late-eligibility observable via persistence/recross,1/-20yen,AWAITING_DATA,PENDING
+Q6,event window auxiliary only,hs_pm60_share=2/37,AWAITING_DATA,PENDING

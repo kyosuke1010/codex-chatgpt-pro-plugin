@@ -1,0 +1,11 @@
+ledger_id,contamination_risk,control,status,evidence,note
+CL01,window selected using prospective results,select window before any June result,CONTROLLED,selection_time=2026-07-02 authored pre-registration; no June metrics referenced,locked_window_manifest frozen
+CL02,window overlaps in-sample,half-open [2026-06-01 00:00 - 2026-07-01 00:00) strictly after 2026-05-29 cutoff,CONTROLLED,in_sample max ToDate 2026-05-29,June disjoint from Mar-May
+CL03,threshold tuned on June,observation trigger 0.05/min frozen before ingest,CONTROLLED,fixed in preregistration_protocol + locked_window_manifest,no post-hoc tuning permitted
+CL04,EA changed between in-sample and June,enforce EA source+EX5 SHA equality,PENDING_VERIFICATION,expected mq5 e57be003.. ex5 49b31402..,pipeline blocks if SHA mismatch
+CL05,different symbol/timeframe/model,enforce Symbol=GOLD TF=M5 Model=0 via input_set check,PENDING_VERIFICATION,from Tester config,pipeline blocks on mismatch
+CL06,in-sample statistics leak into prospective baselines,baselines stored as read-only constants; June not merged into in-sample tables,CONTROLLED,prospective outputs kept in separate files,no re-fit of in-sample
+CL07,look-ahead in slope derivation,closed-bar/backward-window only; no interpolation,CONTROLLED_BY_DESIGN,loss_slope_observation_contract v1.0.0,UNDERIVABLE_SPARSE kept as-is
+CL08,OFF arm missing so non-intervention unverifiable,require both ML_B(OFF) and ML_C(ON) June runs,PENDING_DATA,expected PX06+PX10,decision stays DATA_PENDING until both present
+CL09,2024 M1 or external tick mislabeled as broker-native,record tick source in run manifest; do not conflate,PENDING_VERIFICATION,operator instructions require model=0 broker feed,NA
+CL10,commission treated as zero,commission NA preserved; effects ex-commission,CONTROLLED,schema keeps basket_commission_status,no zero-fill

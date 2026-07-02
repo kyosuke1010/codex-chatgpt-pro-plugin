@@ -1,0 +1,20 @@
+step,check,status,detail
+1,input_presence_and_sha256,AWAITING,"0 files, 0 zips"
+2,extract,AWAITING,0 archives
+3,rediscover_root_snapshot_csv,AWAITING,0 files
+4,rediscover_basket_summary_csv,AWAITING,0 files
+5,rediscover_run_summary_csv,AWAITING,0 files
+6,rediscover_trade_events_csv,AWAITING,0 files
+7,schema_validation_snapshot,AWAITING,
+8,ea_identity_sha,AWAITING,no mq5/ex5 pushed yet
+9,window_match_halfopen_June,AWAITING,
+10,deposit_symbol_tf_model_match,AWAITING,
+11,prehedge_feature_generation,AWAITING,0 baskets
+12,loss_slope_1_3_5min_derivation,AWAITING,
+13,distance_shrink_rate_derivation,AWAITING,
+14,rapid_drop_trigger_eval,AWAITING,fired=0
+15,ma_overlay_join,AWAITING,requires prospective overlay bars (PX11) or offline recompute
+16,event_window_stratification,AWAITING,high_impact_usd_event_window_state present in schema
+17,Q1_Q6_analysis,AWAITING,outcome joins need Basket Summary + overlay
+18,sufficiency_check,AWAITING,hs=0 nh=0 hd=0 bc=0
+19,final_decision,PROSPECTIVE_INGESTION_PIPELINE_READY_WITH_DATA_PENDING,

@@ -1,7 +1,21 @@
 # implementation_not_allowed_statement.md — 実装不許可宣言
 
-date: 2026-07-02
+date: 2026-07-02(Phase 2設計監査で固定フラグを追記)
 scope: 本宣言は次回の明示的な設計レビューで解除されるまで有効。
+
+## 固定フラグ(Phase 2設計監査で確定・変更禁止)
+
+- P1_implementation_allowed = **false**
+- real_exit_implementation_allowed = **false**
+- prehedge_exit_implementation_allowed = **false**
+- ma_cross_logic_implementation_allowed = **false**
+- hedge_gate_implementation_allowed = **false**
+- event_stop_implementation_allowed = **false**
+
+追加根拠(Phase 2監査): Pre-Hedge帯限定再計算で全MA候補のone-step合計が
+マイナス(M15素 -10,258円 / M5 -41,538円)。Pre-Hedge Exitの実装根拠は
+in-sampleですら存在しない。slope系は分布分離するが誤検知約10%で
+行動条件として未成熟(観測専用)。
 
 ## 現時点で実装を許可しないもの
 

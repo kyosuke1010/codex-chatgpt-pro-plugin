@@ -61,6 +61,19 @@ UNKNOWNはUNKNOWNのまま扱う(false/0扱いしない)。
 Basket単位の行データを本workspaceで生成することは捏造にあたるため行わない。
 これはタスクの禁止事項(in-sample結果の偽装、UNKNOWNのfalse扱い)の遵守である。
 
+## 4.5. 更新(2026-07-02 追記): 成果物の所在確認
+
+ユーザーより、全入力成果物がWindowsローカル
+(`C:\Users\user\Documents\New project` および MetaQuotes Experts フォルダ)に
+存在することが確認された。ステータスを MISSING_IN_WORKSPACE から
+**CONFIRMED_ON_USER_MACHINE_AWAITING_PUSH** へ更新。
+
+ただし本セッションはリモートコンテナで動作しており、Windowsローカルへの
+直接アクセス手段は存在しない(ファイルシステム全域検索で確認済み)。
+取り込みには `input_artifacts/README.md` の手順でZIP群を本ブランチへ
+pushする必要がある。到着後は `ingest_verify.py` で検証・再発見を行い、
+Phase B/F/G CSVの充填へ進む。
+
 ## 5. 再計算のブロック解除条件
 
 以下の成果物が本リポジトリ(または参照可能なパス)に配置された時点で、

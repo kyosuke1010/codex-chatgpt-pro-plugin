@@ -1,0 +1,9 @@
+file,required,used_by_audit,key_columns,required_columns,notes
+extraction_report.txt,true,ALL_0.5,NA,MISSING_list;period_coverage;source_identity;row_counts,§0.5 gate. must list MISSING fields and confirm no July contamination
+baskets.csv,true,A1;A3;A5,basket_uid,close_reason;final_pl;first_entry_time;close_time;hedged;capital;run_id,close_reason in {basket close, hard stop emergency close, RecoveryClose, HTE, ...}
+signals.csv,true,A1;A2,basket_uid;signal_code,signal_code;first_fire_time;basket_pl_at_fire,signal_code in {SIG-SLP, SIG-RD, SIG-LSB?, ...}; SIG-LSB excluded if definition unknown
+entries.csv,true,A2,basket_uid;entry_id,entry_time;is_additional;position_pl_final;lots,Additional entries with entry_time>first_fire_time; per-position final P/L
+hedges.csv,true,A3;A4,basket_uid,hedge_time;pl_at_hedge;worst_floating_pl;distance_to_hs_price;post_hedge_max_recovery_pl;margin_level,marker-control stratification variables
+hardstops.csv,true,A1;A2;A3;A4,basket_uid,hs_time;hs_loss;margin_level;capital;run_id,37 in in-sample expected; per-window if provided
+basketclose_winners.csv,true,A5,basket_uid,final_pl;post_close_favorable_move_1h;post_close_favorable_move_4h;post_close_favorable_move_24h;lots,winner cap + favorable move analysis
+equity_curve.csv,true,A4,run_id;time,equity;balance;margin_level,MaxDD measured from this; per run_id/capital

@@ -1,0 +1,7 @@
+scope,signal_group,pre_hedge_fired_baskets,post_hedge_fired_baskets,note
+in6run,SIG-MA,29,0,post-hedge fires excluded from main calc (fidelity to pre-hedge slope def)
+june_post,SIG-MA,4,0,post-hedge fires excluded from main calc (fidelity to pre-hedge slope def)
+pooled,SIG-MA,33,0,post-hedge fires excluded from main calc (fidelity to pre-hedge slope def)
+in6run,SIG-RD,133,0,post-hedge fires excluded from main calc (fidelity to pre-hedge slope def)
+june_post,SIG-RD,15,0,post-hedge fires excluded from main calc (fidelity to pre-hedge slope def)
+pooled,SIG-RD,148,0,post-hedge fires excluded from main calc (fidelity to pre-hedge slope def)

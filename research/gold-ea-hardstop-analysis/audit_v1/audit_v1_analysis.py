@@ -15,7 +15,9 @@ Does not touch July W2. All implementation flags remain false.
 """
 
 import csv
+import hashlib
 import statistics as st
+import zipfile
 from datetime import datetime
 from pathlib import Path
 
@@ -24,6 +26,17 @@ BUNDLE = REPO / "input_artifacts" / "extraction_bundle_v1"
 EXT = BUNDLE / "extracted"
 OUT = REPO / "research" / "gold-ea-hardstop-analysis" / "audit_v1"
 TAG = "in-sample diagnostic only"
+
+# Pinned bundle-ZIP SHA256 (from Codex delivery). Placement contract:
+# operator drops these ZIPs into input_artifacts/extraction_bundle_v1/.
+# v1.2 is authoritative (latest revision); v1 / v1.1 kept for provenance only.
+EXPECTED_ZIP_SHA = {
+    "extraction_bundle_v1.zip":   "f9f12e6999462ef283e9e2fa511cc511e46fe12f87789acae0822cf5e8ddfb29",
+    "extraction_bundle_v1_1.zip": "da8b945e3da0e7aae18fb6a7b1bc8bba7a0e470dfc73931d7962fbcb8de506d6",
+    "extraction_bundle_v1_2.zip": "5fe9b038a16e95550f0968a012a003f7c25a629f008733fdcb846cd8f996df46",
+}
+# authoritative revision (component CSVs read from this one; higher = newer)
+ZIP_PRECEDENCE = ["extraction_bundle_v1_2.zip", "extraction_bundle_v1_1.zip", "extraction_bundle_v1.zip"]
 
 # baseline for §0.5.3 close_reason sanity (from prior ingested in-sample)
 BASELINE = {"win_rate_approx": 0.89, "hardstop_count_insample": 37, "baskets_insample": 442}
@@ -39,9 +52,47 @@ REPORTED_OVERLAP = {"SIG-MA": 33, "SIG-RD": 106, "both": 24,
 AUDIT1_GROUPS = ["SIG-MA", "SIG-RD", "SIG-MA_AND_SIG-RD"]
 
 
+def sha256(p):
+    h = hashlib.sha256()
+    with p.open("rb") as f:
+        for c in iter(lambda: f.read(1 << 20), b""):
+            h.update(c)
+    return h.hexdigest()
+
+
+# Stage 0: verify + extract pinned ZIPs (if any placed). Authoritative subdir
+# = highest-precedence ZIP whose SHA matches. Populated when operator drops ZIPs.
+_zip_report, _auth_dir = [], None
+if BUNDLE.is_dir():
+    present = {p.name: p for p in BUNDLE.iterdir() if p.is_file() and p.suffix.lower() == ".zip"}
+    for name in ZIP_PRECEDENCE:
+        p = present.get(name)
+        if not p:
+            continue
+        got = sha256(p)
+        ok = got == EXPECTED_ZIP_SHA.get(name)
+        dest = EXT / p.stem
+        if ok:
+            try:
+                with zipfile.ZipFile(p) as zf:
+                    if zf.testzip() is None:
+                        zf.extractall(dest)
+            except zipfile.BadZipFile:
+                ok = False
+        _zip_report.append({"zip": name, "sha256": got,
+                            "sha_match": ok, "role": ("authoritative" if (ok and _auth_dir is None) else "provenance")})
+        if ok and _auth_dir is None:
+            _auth_dir = dest
+
+
 def find(name):
-    for root in (BUNDLE, EXT):
-        if root.exists():
+    # prefer the authoritative extracted revision, then any extract, then bundle root
+    roots = []
+    if _auth_dir is not None:
+        roots.append(_auth_dir)
+    roots += [EXT, BUNDLE]
+    for root in roots:
+        if root and root.exists():
             hits = [p for p in root.rglob(name) if p.is_file()]
             if hits:
                 return hits[0]
@@ -112,17 +163,35 @@ if not report or not baskets:
     w("audit5_winner_extension.csv",
       ["metric", "value", "cap_concentration_380_420", "favorable_1h",
        "favorable_4h", "favorable_24h", "verdict_input", "tag"], [])
+    zr = _zip_report or [{"zip": n, "sha256": "NOT_PLACED", "sha_match": "AWAITING", "role": "expected"}
+                         for n in ZIP_PRECEDENCE]
+    w("audit_v1_zip_sha_report.csv", ["zip", "sha256", "sha_match", "role"], zr)
     w("audit_v1_gate_report.csv", ["check", "status", "detail"],
-      [{"check": "extraction_report_present", "status": "FAIL_AWAITING", "detail": "no bundle"},
-       {"check": "baskets_present", "status": "FAIL_AWAITING", "detail": "no bundle"},
+      [{"check": "zip_sha_verification", "status": "AWAITING" if not _zip_report else "SEE_zip_sha_report",
+        "detail": f"placed_zips={[r['zip'] for r in _zip_report]}"},
+       {"check": "extraction_report_present", "status": "FAIL_AWAITING", "detail": "no component CSVs found"},
+       {"check": "baskets_present", "status": "FAIL_AWAITING", "detail": "no component CSVs found"},
        {"check": "july_contamination_scan", "status": "NOT_RUN", "detail": "needs baskets close_time"},
        {"check": "close_reason_baseline_match", "status": "NOT_RUN",
         "detail": f"baseline win~{BASELINE['win_rate_approx']} hs={BASELINE['hardstop_count_insample']}"}])
     print(f"\n=== DECISION: {decision} ===")
+    if _zip_report:
+        bad = [r for r in _zip_report if r["sha_match"] is not True]
+        print("ZIPs placed but component CSVs not found after extraction.",
+              "SHA mismatches:" , [r["zip"] for r in bad] if bad else "none (contents unexpected layout)")
     raise SystemExit(0)
 
 # ---- bundle present: run §0.5 checks ----
 gate_rows = []
+# ZIP SHA verification (provenance + authoritative selection)
+w("audit_v1_zip_sha_report.csv", ["zip", "sha256", "sha_match", "role"],
+  _zip_report or [{"zip": "NONE_EXTRACTED_CSVS_PRESENT_DIRECTLY", "sha256": "NA",
+                   "sha_match": "NA", "role": "direct_csv_placement"}])
+if _zip_report:
+    bad_sha = [r["zip"] for r in _zip_report if r["sha_match"] is not True]
+    gate_rows.append({"check": "zip_sha_verification",
+                      "status": "PASS" if not bad_sha else "FAIL_SHA_MISMATCH",
+                      "detail": f"authoritative={_auth_dir.name if _auth_dir else None} mismatches={bad_sha}"})
 # July contamination
 close_times = []
 for b in baskets:

@@ -1,5 +1,6 @@
 check,status,detail
-extraction_report_present,FAIL_AWAITING,no bundle
-baskets_present,FAIL_AWAITING,no bundle
+zip_sha_verification,AWAITING,placed_zips=[]
+extraction_report_present,FAIL_AWAITING,no component CSVs found
+baskets_present,FAIL_AWAITING,no component CSVs found
 july_contamination_scan,NOT_RUN,needs baskets close_time
 close_reason_baseline_match,NOT_RUN,baseline win~0.89 hs=37

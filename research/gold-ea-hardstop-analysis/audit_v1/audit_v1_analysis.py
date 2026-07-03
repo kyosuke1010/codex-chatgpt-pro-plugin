@@ -28,8 +28,15 @@ TAG = "in-sample diagnostic only"
 # baseline for §0.5.3 close_reason sanity (from prior ingested in-sample)
 BASELINE = {"win_rate_approx": 0.89, "hardstop_count_insample": 37, "baskets_insample": 442}
 JULY_START = datetime(2026, 7, 1)   # any close_time >= this => contamination
-LOW_N = 10  # §1 sample sufficiency
+LOW_N = 10  # §1 sample sufficiency (TP n<10)
 LOW_N_STRATUM = 5  # §3 stratum
+
+# audit1_signal_config.md (v1.2): coverage + reported SIG-MA/SIG-RD overlap
+COVERAGE = {"total": 526, "scoped": 513, "excluded": 13}
+REPORTED_OVERLAP = {"SIG-MA": 33, "SIG-RD": 106, "both": 24,
+                    "SIG-MA_only": 9, "SIG-RD_only": 82}
+# Audit 1 signal groups (SIG-SLP is descriptive-only; no precision/recall, no retune)
+AUDIT1_GROUPS = ["SIG-MA", "SIG-RD", "SIG-MA_AND_SIG-RD"]
 
 
 def find(name):
@@ -85,10 +92,11 @@ if not report or not baskets:
     print("§0.5: extraction_bundle_v1 not present -> AWAITING (no analysis run)")
     # deliverable skeletons (headers reflect Spec §1-§5 outputs)
     w("audit1_precursor_precision.csv",
-      ["signal_code", "recall", "precision", "tp_n", "fp_n", "lead_min_min",
-       "lead_p25", "lead_median", "lead_p75", "lead_max", "S_mean_derisk_upperbound",
-       "C_mean_fp_final_pl", "C_by_BasketClose", "C_by_RecoveryClose", "C_by_HTE",
-       "p_star", "precision_margin", "low_n_flag", "tag"], [])
+      ["signal_group", "fired_scoped_n", "tp_n", "fp_n", "hardstop_scoped_denom",
+       "recall", "precision", "lead_min_min", "lead_p25", "lead_median", "lead_p75",
+       "lead_max", "S_mean_derisk_upperbound", "C_mean_fp_final_pl", "C_by_BasketClose",
+       "C_by_RecoveryClose", "C_by_HTE", "p_star", "precision_margin", "low_n_flag",
+       "S_note", "tag"], [])
     w("audit2_exposure_amplification.csv",
       ["signal_code", "amp_ratio_median", "amp_ratio_p25", "amp_ratio_p75",
        "loss_post_signal_sum", "winner_kill_risk_sum", "winner_kill_risk_mean",
@@ -146,6 +154,28 @@ gate_rows.append({"check": "sig_lsb_definition",
                   "status": "DEFINED" if lsb_defined else "UNKNOWN_EXCLUDED",
                   "detail": f"active_signals={active_sigs}"})
 
+# ---- coverage + SIG-MA/SIG-RD overlap cross-check (audit1_signal_config.md) ----
+exclusions = load("exclusions.csv")
+excluded_uids = {r.get("basket_uid", "") for r in exclusions} if exclusions else set()
+scoped = [b for b in baskets if b.get("basket_uid") not in excluded_uids]
+gate_rows.append({"check": "coverage_scoped_denominator",
+                  "status": "PASS" if (not exclusions or len(excluded_uids) == COVERAGE["excluded"]) else "REVIEW",
+                  "detail": f"scoped={len(scoped)} excluded={len(excluded_uids)} "
+                            f"(expected scoped={COVERAGE['scoped']} excluded={COVERAGE['excluded']})"})
+
+fired = {}
+for code in ("SIG-MA", "SIG-RD", "SIG-SLP"):
+    fired[code] = {s.get("basket_uid") for s in signals
+                   if s.get("signal_code") == code and s.get("basket_uid") not in excluded_uids}
+obs_overlap = {"SIG-MA": len(fired["SIG-MA"]), "SIG-RD": len(fired["SIG-RD"]),
+               "both": len(fired["SIG-MA"] & fired["SIG-RD"]),
+               "SIG-MA_only": len(fired["SIG-MA"] - fired["SIG-RD"]),
+               "SIG-RD_only": len(fired["SIG-RD"] - fired["SIG-MA"])}
+overlap_ok = obs_overlap == REPORTED_OVERLAP
+gate_rows.append({"check": "sig_ma_rd_overlap_match",
+                  "status": "PASS" if overlap_ok else "REVIEW_DEVIATION",
+                  "detail": f"observed={obs_overlap} reported={REPORTED_OVERLAP}"})
+
 w("audit_v1_gate_report.csv", ["check", "status", "detail"], gate_rows)
 blocked = any(g["status"].startswith("FAIL") for g in gate_rows)
 if blocked:
@@ -153,10 +183,135 @@ if blocked:
     print("=== DECISION: RETURN_TO_CODEX_EXTRACTION_DEFECT ===")
     raise SystemExit(0)
 
-# ================= NOTE =================
-# Full Audit 4->1->2->3->5 computation activates here once a real bundle passes
-# §0.5. Implemented per Spec §1-§5 (formulas encoded in functions below). Kept
-# guarded so partial bundles degrade to LOW_N / SKIPPED rather than fabricating.
-print("§0.5 passed. Bundle present — audit computation would run here (Spec §1-§5).")
-print("This branch is exercised only with a real extraction_bundle_v1.")
-print("=== DECISION: BUNDLE_PRESENT_RUN_AUDITS (execute Spec order 4,1,2,3,5) ===")
+# ================= Audit 1: Precursor Precision / Break-even (Spec §1) =================
+# scoped HardStop set + per-basket earliest fire time / pl_at_fire per signal
+hs_rows = {r.get("basket_uid"): r for r in (load("hardstops.csv") or [])
+           if r.get("basket_uid") not in excluded_uids}
+hardstop_uids = {b.get("basket_uid") for b in scoped if "hard" in (b.get("close_reason", "").lower())}
+n_hs = len(hardstop_uids)
+basket_by_uid = {b.get("basket_uid"): b for b in scoped}
+
+
+def parse_t(s):
+    s = (s or "").replace(".", "-")[:19]
+    try:
+        return datetime.strptime(s, "%Y-%m-%d %H:%M:%S")
+    except ValueError:
+        return None
+
+
+# per (basket, signal_code): earliest first_fire_time and its basket_pl_at_fire
+fire = {}
+for s in signals:
+    uid, code = s.get("basket_uid"), s.get("signal_code")
+    if uid in excluded_uids or code not in ("SIG-MA", "SIG-RD"):
+        continue
+    t = parse_t(s.get("first_fire_time"))
+    key = (uid, code)
+    if key not in fire or (t and fire[key][0] and t < fire[key][0]):
+        fire[key] = (t, num(s.get("basket_pl_at_fire")))
+
+
+def group_members(g):
+    if g == "SIG-MA":
+        return set(fired["SIG-MA"])
+    if g == "SIG-RD":
+        return set(fired["SIG-RD"])
+    return set(fired["SIG-MA"] & fired["SIG-RD"])
+
+
+def group_fire(uid, g):
+    """earliest fire time + pl_at_fire for the group in a basket (min across signals)."""
+    cands = []
+    for code in (("SIG-MA", "SIG-RD") if g == "SIG-MA_AND_SIG-RD" else (g,)):
+        f = fire.get((uid, code))
+        if f and f[0]:
+            cands.append(f)
+    if not cands:
+        return (None, None)
+    return min(cands, key=lambda x: x[0])
+
+
+a1_rows = []
+for g in AUDIT1_GROUPS:
+    members = group_members(g)
+    tp = members & hardstop_uids
+    fp = members - hardstop_uids
+    recall = len(tp) / n_hs if n_hs else None
+    precision = len(tp) / len(members) if members else None
+    leads = []
+    S_terms = []
+    for uid in tp:
+        ft, pl = group_fire(uid, g)
+        hst = parse_t((hs_rows.get(uid) or {}).get("hs_time"))
+        hsl = num((hs_rows.get(uid) or {}).get("hs_loss"))
+        if ft and hst:
+            leads.append((hst - ft).total_seconds() / 60.0)
+        if hsl is not None and pl is not None:
+            S_terms.append(hsl - pl)
+    fp_by_reason = {"BasketClose": [], "RecoveryClose": [], "HTE": []}
+    C_terms = []
+    for uid in fp:
+        b = basket_by_uid.get(uid, {})
+        fpl = num(b.get("final_pl"))
+        if fpl is None:
+            continue
+        C_terms.append(fpl)
+        r = (b.get("close_reason", "") or "").lower()
+        if "basket close" in r:
+            fp_by_reason["BasketClose"].append(fpl)
+        elif "recovery" in r:
+            fp_by_reason["RecoveryClose"].append(fpl)
+        elif "hte" in r:
+            fp_by_reason["HTE"].append(fpl)
+    S = st.mean(S_terms) if S_terms else None
+    C = st.mean(C_terms) if C_terms else None
+    p_star = (C / (C + S)) if (S is not None and C is not None and (C + S) != 0) else None
+    p_margin = (precision - p_star) if (precision is not None and p_star is not None) else None
+    a1_rows.append({
+        "signal_group": g, "fired_scoped_n": len(members), "tp_n": len(tp), "fp_n": len(fp),
+        "hardstop_scoped_denom": n_hs,
+        "recall": f"{recall:.4f}" if recall is not None else "NA",
+        "precision": f"{precision:.4f}" if precision is not None else "NA",
+        "lead_min_min": f"{min(leads):.1f}" if leads else "NA",
+        "lead_p25": f"{pctl(leads,0.25):.1f}" if leads else "NA",
+        "lead_median": f"{pctl(leads,0.5):.1f}" if leads else "NA",
+        "lead_p75": f"{pctl(leads,0.75):.1f}" if leads else "NA",
+        "lead_max": f"{max(leads):.1f}" if leads else "NA",
+        "S_mean_derisk_upperbound": f"{S:.1f}" if S is not None else "NA",
+        "C_mean_fp_final_pl": f"{C:.1f}" if C is not None else "NA",
+        "C_by_BasketClose": f"{st.mean(fp_by_reason['BasketClose']):.1f}" if fp_by_reason["BasketClose"] else "NA",
+        "C_by_RecoveryClose": f"{st.mean(fp_by_reason['RecoveryClose']):.1f}" if fp_by_reason["RecoveryClose"] else "NA",
+        "C_by_HTE": f"{st.mean(fp_by_reason['HTE']):.1f}" if fp_by_reason["HTE"] else "NA",
+        "p_star": f"{p_star:.4f}" if p_star is not None else "NA",
+        "precision_margin": f"{p_margin:.4f}" if p_margin is not None else "NA",
+        "low_n_flag": "LOW_N" if len(tp) < LOW_N else "",
+        "S_note": "S = theoretical full-derisk upper bound at first fire; NOT a Close-Priority/Hedge counterfactual",
+        "tag": TAG})
+
+# SIG-SLP descriptive only (no precision/recall, no threshold retest)
+slp = fired["SIG-SLP"]
+slp_pl = [num(s.get("basket_pl_at_fire")) for s in signals
+          if s.get("signal_code") == "SIG-SLP" and s.get("basket_uid") not in excluded_uids
+          and num(s.get("basket_pl_at_fire")) is not None]
+a1_rows.append({
+    "signal_group": "SIG-SLP_DESCRIPTIVE_ONLY", "fired_scoped_n": len(slp),
+    "tp_n": "NA", "fp_n": "NA", "hardstop_scoped_denom": n_hs,
+    "recall": "NA_DESCRIPTIVE_ONLY", "precision": "NA_DESCRIPTIVE_ONLY",
+    "lead_median": f"{pctl(slp_pl,0.5):.1f}" if slp_pl else "NA",
+    "S_note": "descriptive stats only; threshold re-test forbidden (0.05/min frozen)",
+    "tag": TAG})
+
+w("audit1_precursor_precision.csv",
+  ["signal_group", "fired_scoped_n", "tp_n", "fp_n", "hardstop_scoped_denom",
+   "recall", "precision", "lead_min_min", "lead_p25", "lead_median", "lead_p75",
+   "lead_max", "S_mean_derisk_upperbound", "C_mean_fp_final_pl", "C_by_BasketClose",
+   "C_by_RecoveryClose", "C_by_HTE", "p_star", "precision_margin", "low_n_flag",
+   "S_note", "tag"], a1_rows)
+
+print("§0.5 passed. Audit 1 computed (SIG-MA / SIG-RD / SIG-MA∩SIG-RD + SIG-SLP descriptive).")
+for r in a1_rows:
+    print(f"  {r['signal_group']}: fired={r['fired_scoped_n']} tp={r.get('tp_n')} "
+          f"recall={r.get('recall')} precision={r.get('precision')} {r.get('low_n_flag','')}")
+print("Audit 4/2/3/5 pending (this message specified Audit 1 config only).")
+print("=== DECISION: AUDIT1_COMPUTED_REMAINING_AUDITS_PENDING (in-sample diagnostic only) ===")

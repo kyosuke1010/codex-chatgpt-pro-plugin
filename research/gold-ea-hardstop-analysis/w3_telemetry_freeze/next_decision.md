@@ -5,10 +5,11 @@ date: 2026-07-11
 
 ## 次の意思決定(ユーザー承認事項)
 
-**W3_LOGGING_IMPLEMENTATION_AUTHORIZATION**(未承認):
-Codex が本凍結仕様どおりに W3Telemetry.mqh を実装してよいか。
-承認されるまで mq5/mqh への変更は行わない。承認は「ログ追記のみ」に限定され、
+**W3_LOGGING_IMPLEMENTATION_AUTHORIZATION**: **承認済み(2026-07-11、ユーザー承認)**。
+承認範囲は「凍結スキーマ W3.1 どおりのログ追記のみ」。売買ロジック・Exit・Hedge・
+HardStop・rapid_drop 0.05 への変更は承認に含まれない。
 実装系フラグ(P1/Exit/Hedge gate/HardStop変更)は false のまま。
+Codex向け実装依頼書: w3_implementation_request.md。
 
 ## 承認後の工程(順序固定、担当: Codex=MT5側 / Claude=検収・解析側)
 

@@ -1,0 +1,6 @@
+insertion_id,insertion_point,existing_anchor,w3_events_emitted,read_only_inputs,forbidden_at_this_point,ordering_guarantee
+I1,OnTick末尾(全既存処理完了後),既存のtick処理・判定・既存ログ出力の後,W3_HS_DETECT(閾値初回超過時)/ W3_WORST_UPDATE(250円悪化時)/ W3_HEDGE_EVAL(条件変化時),floating P/L・threshold・positions・既存block reason変数,トレードAPI呼出/判定変数への書込/既存ログへの行追加/return経路の変更,既存処理→W3観測の順。W3がtick処理を先行・中断しない
+I2,defense hedge約定確定直後,既存hedge発注処理の成功リターン後(既存HEDGEイベント出力の後),W3_HEDGE_TIMING,hedge ticket・floating・threshold・T3 running-min,hedge再試行/パラメータ変更/発注,既存hedge処理完了が前提。失敗時はW3行を出さない(観測対象なし)
+I3,HardStop close order送信直前,既存HS発火判定がtrueとなり送信処理に入る直前,W3_HS_SEND,送信参照価格・時刻,送信の遅延/条件追加/キャンセル,SENDログ記録後に既存送信処理へ(記録は同期・軽量。失敗しても送信続行=failure isolation)
+I4,HardStop close約定確定後(leg毎)+basket確定後,既存HARDSTOP_CLOSEイベント出力の後,W3_HS_FILL(leg毎)/ W3_HS_BASKET_SUMMARY,fill価格・時刻・retcode・leg損益・DETECT/SEND転記値,再約定/リトライ制御の変更,既存close完了→W3記録
+I5,basket close確定後(全close_reason共通)+OnDeinit,既存BASKET_CLOSE/HTE/RECOVERY等のイベント出力後; OnDeinitはfile flush+W3_LOGGER_STATUSのみ,W3_CLOSE_ANCHOR / W3_LOGGER_STATUS,close時刻・価格・reason・final_pl・T3最終値,close後の追記/タイマー/未来参照,OnDeinitで未flush行を書き切る。flush失敗も非伝播

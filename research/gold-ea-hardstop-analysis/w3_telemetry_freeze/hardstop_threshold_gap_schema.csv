@@ -1,0 +1,19 @@
+column,type,unit,nullable,missing_sentinel,description,gap_component
+w3_event,string,-,no,-,W3_HS_DETECT | W3_HS_SEND | W3_HS_FILL(leg毎) | W3_HS_BASKET_SUMMARY,-
+detect_time_msc,int64,msec,yes,MISSING,floating lossが閾値を最初に超えたtickの時刻(DETECT行で記録し以降の行に転記),基準点
+detect_floating_loss_yen,double,yen,yes,MISSING,DETECT時点floating loss,基準点
+detect_bid,double,price,yes,MISSING,DETECT時点Bid,価格基準
+detect_ask,double,price,yes,MISSING,DETECT時点Ask,価格基準
+send_time_msc,int64,msec,yes,MISSING,close order送信直前時刻(SEND行),detect→send遅延
+send_requested_price,double,price,yes,MISSING,送信時の参照価格,滑り基準
+fill_time_msc,int64,msec,yes,MISSING,約定確定時刻(FILL行・leg毎),send→fill遅延
+fill_price,double,price,yes,MISSING,約定価格(leg毎),滑り実現
+fill_leg_direction,string,-,yes,MISSING,BUY_CLOSE|SELL_CLOSE(hedged=2行),leg識別
+fill_leg_profit_yen,double,yen,yes,MISSING,leg実現損益(既存ProfitYen相当の観測転記),leg分解
+retcode_copy,string,-,yes,MISSING,約定retcode転記(再試行はFILL行を約定成功時のみ・試行はSEND行追加),失敗経路
+detect_to_send_ms,int64,ms,yes,MISSING,SUMMARY行: send_time-detect_time,遅延分解
+send_to_fill_ms,int64,ms,yes,MISSING,SUMMARY行: 最終fill-最初send,遅延分解
+price_gap,double,price,yes,MISSING,SUMMARY行: fill加重平均価格 - detect時価格(方向符号付き),滑り分解
+realized_basket_loss_yen,double,yen,yes,MISSING,SUMMARY行: basket確定損失,結果
+threshold_gap_yen,double,yen,yes,MISSING,SUMMARY行: realized_basket_loss - (-threshold)。負=閾値超過分(例: -9019 vs 8000 → -1019),左裾超過の直接計測
+market_closed_retry_count,int,count,yes,MISSING,SUMMARY行: DETECT以降のMARKET_CLOSED系リトライ回数(既存イベントの観測集計),確定遅延要因

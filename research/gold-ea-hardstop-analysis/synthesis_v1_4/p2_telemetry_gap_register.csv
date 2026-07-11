@@ -1,0 +1,5 @@
+field,definition,blocks_what,blocked_audit_or_decision,mechanism_link,collection_method,constraints
+distance_to_hs_price,hedge発動時点のHardStop価格までの距離(現bundle 0/48 MISSING),hedge_too_late判定(hedgeはHS目前で発動していたか),Audit3 timing / HEDGE_TIMING_TELEMETRY_REQUIRED,M1・M2(hedge不発含む),W3 Shadow Loggingにログ項目追加(売買ロジック非接触),非介入確認(Shadow OFF/ON trade events byte一致)を追記後に再実施してから収集run開始; rapid_drop 0.05不変; July W2非接触
+worst_floating_pl,basket生涯の最悪含み損(現bundle 0/526 MISSING),hedge前の往復深度・drawdown経路の層化; pre-hedge damage control設計の審査可否,Audit3 層化 / PREHEDGE_DAMAGE_CONTROL_TELEMETRY_REQUIRED,M1・M2,同上,同上
+post_close_move_1h/4h/24h,BasketClose後1h/4h/24hの価格変動(現bundle 0/467 MISSING),winner延長の可否判定(cap 420円の機会損失定量),Audit5 / WINNER_EXTENSION_DATA_REQUIRED,(winner側; HardStop外),同上(Close後の価格記録のみ),同上
+hardstop_threshold_to_realized_gap,threshold(8000)と実現hs_loss(最悪-9019)の乖離要因(滑り/ギャップ/確定遅延),M3の閾値挙動確定; 左裾深さの制御変数特定,M3 / EXIT_IMPLEMENTATION_NOT_READY解除条件の一部,M3,threshold到達時刻・約定時刻・約定価格の3点ログ追加,同上

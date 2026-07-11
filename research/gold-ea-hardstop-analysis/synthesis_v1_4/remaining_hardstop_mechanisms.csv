@@ -1,0 +1,4 @@
+mechanism_id,mechanism,n_hardstops,share,hs_loss_median,duration_median_h,gross_leg_median,sig_rd_coverage,structure,missing_telemetry,status
+M1,hedged long-duration one-way drift,32,0.744,-4018,140.9,±34522(gross/net≈7.9x),0.844,1main+1hedgeで凍結後も両脚膨張し回復せずHS閾値で確定; hedge時点で既にfloating中央-3169(LOSS_DOMINANT_BEFORE_HEDGE),distance_to_hs_price@hedge / worst_floating_pl,PRIMARY_REMAINING
+M2,non-hedged rapid adverse move,11,0.256,-3825,0.63,gross=net(単脚),1.000,約38分で単脚のままHS到達; hedge不発; SIG-RDは11/11で事前発火(rapid drop定義通り),hedge不発時の距離/経路(distance系)/ worst_floating_pl,PRIMARY_REMAINING
+M3,HardStop threshold/timing(横断),43,1.000,-3746〜-9019の分布,NA(横断),NA,0.884(pooled),両原型の損失中央値がほぼ同一=損失規模は経路でなく閾値側で決定; threshold 8000 と実現hs_loss(最悪-9019)の乖離=ギャップ/滑りは未計測,threshold到達時距離・確定タイミング系 telemetry,CROSS_CUTTING_REMAINING

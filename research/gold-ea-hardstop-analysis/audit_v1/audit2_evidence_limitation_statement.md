@@ -1,6 +1,14 @@
 # audit2_evidence_limitation_statement.md — Audit 2 証拠制約ステートメント
 
 date: 2026-07-11
+**改訂(同日、v1.4到着後)**: 以下の項目は v1.4(deals_v1_4.csv)で解消した —
+position_pl_final(CLOSE行 ProfitYen、521/521で final_pl と一致)、
+max_positions(全イベント上限 main1+hedge1=2)、lot(全て0.01固定と確定)、
+margin_level 実値(HEDGE時点 min 2,406%。0.00 placeholder 解消)。
+**残存する制約**: distance_to_hs_price / worst_floating_pl(時系列最悪値)/
+post_close_move_1h/4h/24h は依然 EVIDENCE_UNAVAILABLE(P2=W3ログ追記待ち)。
+open_time の直接ENTRY照合は 400/526(126件は interval割当。close/final_pl は
+521/526一致+5 DEINIT想定内)。以下の本文は v1.4 到着前の記録として保存。
 目的: Audit 2(exposure amplification)で **何が証拠不能か** を明示固定し、
 未取得値の 0 扱い・過大解釈を防ぐ。
 

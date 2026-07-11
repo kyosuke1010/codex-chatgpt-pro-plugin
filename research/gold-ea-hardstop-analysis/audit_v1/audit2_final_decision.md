@@ -1,11 +1,46 @@
 # audit2_final_decision.md — Audit 2 判定
 
-date: 2026-07-11
+date: 2026-07-11(v1.4到着により同日改訂。改訂前判定は §旧判定 に保存)
 scope: in6run(in-sample diagnostic only)を主。june_post/pooled は参照。
 入力: audit2_basket_level_exposure_proxy.csv / audit2_basket_level_exposure_summary.md /
-audit2_evidence_limitation_statement.md
+audit2_evidence_limitation_statement.md / **audit2_axisA_position_level.csv(v1.4)**
 
-## 判定(2軸に分離)
+## 改訂判定(v1.4 deal-level到着後)
+
+### 軸A: position/lot exposure amplification
+**判定 = `AUDIT2_BASKET_LEVEL_PROXY_SUPPORTED` を position-level で確定に格上げ:
+増幅は「発生していない」(AMPLIFICATION_ABSENT_BY_OBSERVATION)**
+
+v1.4(既存Trade Events 3,498行のbasket割当再構成、Tester再実行なし・EA無変更、
+SHA B6B2..4800 一致)により、旧判定 `AUDIT2_POSITION_LEVEL_DATA_REQUIRED` は解消:
+
+| 検証 | 結果 |
+|---|---|
+| 同一性 | leg損益合計 vs v1 final_pl: **521/521一致**(残5=DEINIT想定内) |
+| 積み増し(add-entry) | **全3,498イベントで MainDirectionPositions max=1** — 一度も発生せず |
+| 同時ポジション最大 | **2(main 1 + defense hedge 1)** が全runの上限 |
+| lot増幅 | **OrderLots 全て 0.01** — スケーリングなし |
+| margin実値 | HEDGE時点 min **2,406%**(placeholder 0.00 解消)。200%割れ皆無 |
+
+**結論: 「エントリ/ロット積み増しによる損失増幅」は仮説ごと棄却(観測上不存在)。**
+HardStop損失は grid でも lot でもなく、**1+1構成のまま床(HardStop閾値)まで
+落ちる**ことで発生している。
+
+### 新たに定量化された本質: 利益相殺(profit-offset)構造
+
+hedged HardStop 32件の leg分解:
+- **グロス両脚 中央 ±34,522円 に対しネット −4,018円(gross/net ≈ 7.9倍)**
+  (極端例: 片脚 +106,701 / 逆脚相殺でネット −8,759)
+- hedge はネット損失を凍結するが、その後も両脚は膨張を続け、
+  回復せず HardStop 閾値で確定する(LOSS_DOMINANT_BEFORE_HEDGE と整合)。
+- non-hedged 11件は gross=net(中央 −3,825、単脚のまま高速でHS到達)。
+
+→ EA名の由来である「利益相殺生き残り型」の生存メカニズムは position-level で
+実証されたが、**同時にその代償(凍結された損失は縮まない)も実証された**。
+
+## 旧判定(v1.4到着前。記録として保存)
+
+### (旧)判定(2軸に分離)
 
 exposure amplification は「何を測るか」で証拠状態が分かれるため、単一判定ではなく
 **次元別に確定**する。

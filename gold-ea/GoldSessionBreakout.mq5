@@ -15,7 +15,7 @@
 //|  deployment.                                                     |
 //+------------------------------------------------------------------+
 #property copyright   "MIT License"
-#property version     "1.00"
+#property version     "1.10"
 #property description "Asian-range breakout at London open for XAUUSD with strict risk controls."
 
 #include <Trade\Trade.mqh>
@@ -31,6 +31,7 @@ input int               InpAsiaStartHour      = 1;          // Asian range: star
 input int               InpAsiaEndHour        = 9;          // Asian range: end hour (~London open)
 input int               InpLastEntryHour      = 15;         // No new entries at/after this hour
 input int               InpFlatHour           = 22;         // Close all positions at this hour
+input int               InpPreCloseBufferMin  = 15;         // Also flatten this many minutes before session close
 
 input group "=== Range quality (multiples of daily ATR) ==="
 input int               InpATRPeriodD1        = 14;         // Daily ATR period
@@ -52,10 +53,12 @@ input double            InpMaxSLATR           = 0.80;       // Cap SL distance, 
 input double            InpTPRR               = 1.6;        // Take profit, R multiple
 input double            InpBreakevenR         = 1.0;        // Move SL to breakeven at this R
 input double            InpTrailATRMult       = 2.5;        // Trail distance, x H1 ATR (after BE)
+input int               InpTrailStepPoints    = 30;         // Min SL improvement (points) per trail update
 input int               InpATRPeriodH1        = 14;         // H1 ATR period (trailing)
 input double            InpDailyLossPct       = 2.0;        // Daily loss stop, % of day-start equity
 input bool              InpFlattenOnDailyStop = true;       // Close open positions when daily stop hits
 input double            InpMaxDrawdownPct     = 10.0;       // Hard lockout, % below equity high-water mark
+input bool              InpFlattenOnDDLock    = true;       // Close open positions when lockout triggers
 input int               InpMaxTradesPerSide   = 1;          // Max entries per direction per day
 
 input group "=== Execution guards ==="
@@ -112,9 +115,13 @@ int OnInit()
       return INIT_FAILED;
    }
 
-   g_hwmName = StringFormat("GSB_HWM_%s_%I64d", _Symbol, InpMagic);
+   // account login in the key: isolates state between accounts on one terminal
+   g_hwmName = StringFormat("GSB_HWM_%I64d_%s_%I64d",
+                            AccountInfoInteger(ACCOUNT_LOGIN), _Symbol, InpMagic);
    if(!GlobalVariableCheck(g_hwmName))
       GlobalVariableSet(g_hwmName, AccountInfoDouble(ACCOUNT_EQUITY));
+
+   EventSetTimer(60);   // flat enforcement even when no ticks arrive
 
    return INIT_SUCCEEDED;
 }
@@ -122,6 +129,7 @@ int OnInit()
 //+------------------------------------------------------------------+
 void OnDeinit(const int reason)
 {
+   EventKillTimer();
    if(g_hATR_D1  != INVALID_HANDLE) IndicatorRelease(g_hATR_D1);
    if(g_hATR_H1  != INVALID_HANDLE) IndicatorRelease(g_hATR_H1);
    if(g_hTrendMA != INVALID_HANDLE) IndicatorRelease(g_hTrendMA);
@@ -137,13 +145,19 @@ void OnTick()
    MqlDateTime tm;
    TimeToStruct(TimeCurrent(), tm);
 
-   // end-of-day flat: avoid rollover spread blowout and overnight gaps
-   if(tm.hour >= InpFlatHour)
+   // positions carried past midnight (early-close/holiday days): close at first opportunity
+   CloseStalePositions();
+
+   // end-of-day flat: rollover spread, overnight gaps, broker session close
+   if(tm.hour >= InpFlatHour || SessionCloseSoon())
    {
-      CloseAllPositions("flat hour");
+      CloseAllPositions("flat window");
       UpdateChartComment(tm);
       return;
    }
+
+   if(InpFlattenOnDDLock && DrawdownLocked())
+      CloseAllPositions("dd lockout");
 
    ManageOpenPositions();
    CheckDailyStop();
@@ -155,6 +169,20 @@ void OnTick()
       CheckBreakoutEntry();
 
    UpdateChartComment(tm);
+}
+
+//+------------------------------------------------------------------+
+//| Timer: enforce the flat rules even when no ticks arrive          |
+//+------------------------------------------------------------------+
+void OnTimer()
+{
+   UpdateDay();
+   CloseStalePositions();
+
+   MqlDateTime tm;
+   TimeToStruct(TimeCurrent(), tm);
+   if(tm.hour >= InpFlatHour || SessionCloseSoon())
+      CloseAllPositions("flat window (timer)");
 }
 
 //+------------------------------------------------------------------+
@@ -404,7 +432,7 @@ void ManageOpenPositions()
          else if(sl >= entry && atrH1 > 0)
          {
             double newSL = NormalizeDouble(tick.bid - InpTrailATRMult * atrH1, _Digits);
-            if(newSL > sl + _Point && newSL <= tick.bid - minStop)
+            if(newSL >= sl + InpTrailStepPoints * _Point && newSL <= tick.bid - minStop)
                g_trade.PositionModify(g_pos.Ticket(), newSL, tp);
          }
       }
@@ -420,7 +448,7 @@ void ManageOpenPositions()
          else if(sl <= entry && sl > 0 && atrH1 > 0)
          {
             double newSL = NormalizeDouble(tick.ask + InpTrailATRMult * atrH1, _Digits);
-            if(newSL < sl - _Point && newSL >= tick.ask + minStop)
+            if(newSL <= sl - InpTrailStepPoints * _Point && newSL >= tick.ask + minStop)
                g_trade.PositionModify(g_pos.Ticket(), newSL, tp);
          }
       }
@@ -513,6 +541,46 @@ void CloseAllPositions(const string reason)
       if(!g_trade.PositionClose(g_pos.Ticket()))
          PrintFormat("Close failed (%s): %s", reason, g_trade.ResultRetcodeDescription());
    }
+}
+
+//+------------------------------------------------------------------+
+//| Close positions opened on a previous day. On early-close days    |
+//| the flat hour may never fire; this bounds the carry to the next  |
+//| available tick instead of the next day's flat hour.              |
+//+------------------------------------------------------------------+
+void CloseStalePositions()
+{
+   for(int i = PositionsTotal() - 1; i >= 0; i--)
+   {
+      if(!g_pos.SelectByIndex(i)) continue;
+      if(g_pos.Magic() != InpMagic || g_pos.Symbol() != _Symbol) continue;
+      if(g_pos.Time() >= g_curDay) continue;
+      if(g_trade.PositionClose(g_pos.Ticket()))
+         Print("Stale position from a previous day closed");
+      else
+         PrintFormat("Stale-position close failed: %s", g_trade.ResultRetcodeDescription());
+   }
+}
+
+//+------------------------------------------------------------------+
+//| True when today's scheduled trade session ends within the        |
+//| pre-close buffer. Catches short Fridays from the symbol's        |
+//| session schedule; ad-hoc holiday early closes may not appear     |
+//| there - CloseStalePositions() is the fallback for those.         |
+//+------------------------------------------------------------------+
+bool SessionCloseSoon()
+{
+   MqlDateTime tm;
+   TimeToStruct(TimeCurrent(), tm);
+
+   datetime from = 0, to = 0, lastEnd = 0;
+   for(uint s = 0; SymbolInfoSessionTrade(_Symbol, (ENUM_DAY_OF_WEEK)tm.day_of_week, s, from, to); s++)
+      lastEnd = to;
+   if(lastEnd <= 0)
+      return false;
+
+   long secOfDay = (long)TimeCurrent() % 86400;
+   return secOfDay >= (long)lastEnd - (long)InpPreCloseBufferMin * 60;
 }
 
 //+------------------------------------------------------------------+

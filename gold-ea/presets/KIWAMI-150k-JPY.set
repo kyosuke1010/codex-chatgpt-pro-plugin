@@ -1,0 +1,39 @@
+; GoldSessionBreakout v1.11 preset
+; Account: XM KIWAMI (GOLD#), capital ~150,000 JPY, leverage irrelevant to sizing
+; Risk 1.0%/trade + min-lot fallback capped at 2.0% actual risk
+InpMagic=20260715
+InpTradeComment=GSB
+InpAsiaStartHour=1
+InpAsiaEndHour=9
+InpLastEntryHour=15
+InpFlatHour=22
+InpPreCloseBufferMin=15
+InpATRPeriodD1=14
+InpMinRangeATR=0.10
+InpMaxRangeATR=0.60
+InpBreakBufferATR=0.05
+InpMaxChaseATR=0.25
+InpAllowLong=1
+InpAllowShort=1
+InpUseTrendFilter=1
+InpTrendTF=16388
+InpTrendMAPeriod=50
+InpRiskPercent=1.0
+InpMaxSLATR=0.80
+InpTPRR=1.6
+InpBreakevenR=1.0
+InpTrailATRMult=2.5
+InpTrailStepPoints=30
+InpATRPeriodH1=14
+InpDailyLossPct=2.0
+InpFlattenOnDailyStop=1
+InpMaxDrawdownPct=10.0
+InpFlattenOnDDLock=1
+InpMaxTradesPerSide=1
+InpAllowMinLotFallback=1
+InpHardRiskCapPct=2.0
+InpMaxSpreadPoints=25
+InpSlippagePoints=50
+InpUseNewsFilter=1
+InpNewsBlockBeforeMin=30
+InpNewsBlockAfterMin=30

@@ -11,7 +11,7 @@
 //| stress tests) before risking money.                              |
 //+------------------------------------------------------------------+
 #property copyright "MIT"
-#property version   "1.00"
+#property version   "1.10"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -41,6 +41,14 @@ enum ENUM_TREND_FILTER
    TREND_FILTER_AGAINST = 2                    // Trade only against M5 EMA200 trend
   };
 input ENUM_TREND_FILTER InpTrendFilter = TREND_FILTER_WITH; // Trend filter mode
+enum ENUM_ENTRY_CONFIRM
+  {
+   CONFIRM_NONE         = 0,                   // Enter right after the extreme close
+   CONFIRM_REENTRY      = 1,                   // Wait for a close back inside the band
+   CONFIRM_REVERSAL_BAR = 2                    // Re-entry close + bar direction agrees
+  };
+input ENUM_ENTRY_CONFIRM InpEntryConfirm = CONFIRM_REENTRY; // Entry confirmation mode
+input int    InpConfirmTimeoutBars = 5;        // Cancel setup after N bars w/o confirm
 
 //=== Inputs: exits ====================================================
 input double InpSlAtrMult        = 1.5;        // SL distance in ATR(14,M1) mult
@@ -68,6 +76,8 @@ int      g_hEmaM5 = INVALID_HANDLE;
 
 datetime g_lastBarTime      = 0;      // last processed M1 bar
 datetime g_lastSignalBar    = 0;      // bar that already produced an entry
+int      g_pendingDir       = 0;      // armed setup awaiting confirmation (0=none)
+int      g_pendingBars      = 0;      // closed bars elapsed since the setup was armed
 datetime g_dayAnchorDate    = 0;      // start of current trading day
 double   g_dayStartEquity   = 0.0;
 int      g_tradesToday      = 0;
@@ -368,6 +378,40 @@ int GetSignal(const double atr)
   }
 
 //+------------------------------------------------------------------+
+//| Confirmation: has price actually started turning back?           |
+//| Long: closed bar back INSIDE the band (close > lower band);      |
+//| REVERSAL_BAR additionally requires the bar itself to be bullish. |
+//+------------------------------------------------------------------+
+bool SetupConfirmed(const int dir)
+  {
+   double upper[1], lower[1];
+   if(CopyBuffer(g_hBands, UPPER_BAND, 1, 1, upper) != 1) return false;
+   if(CopyBuffer(g_hBands, LOWER_BAND, 1, 1, lower) != 1) return false;
+
+   double close = iClose(_Symbol, PERIOD_M1, 1);
+   double open  = iOpen(_Symbol, PERIOD_M1, 1);
+   if(close <= 0 || open <= 0)
+      return false;
+
+   if(dir > 0)
+     {
+      if(close <= lower[0])
+         return false;                      // still outside — knife is still falling
+      if(InpEntryConfirm == CONFIRM_REVERSAL_BAR && close <= open)
+         return false;                      // re-entered but the bar is not bullish
+      return true;
+     }
+   else
+     {
+      if(close >= upper[0])
+         return false;
+      if(InpEntryConfirm == CONFIRM_REVERSAL_BAR && close >= open)
+         return false;
+      return true;
+     }
+  }
+
+//+------------------------------------------------------------------+
 //| Position sizing: fixed fractional risk against SL distance       |
 //+------------------------------------------------------------------+
 double CalcLots(const double slDistance)
@@ -454,7 +498,10 @@ void OnTick()
    g_lastBarTime = barTime;
 
    if(HasOpenPosition())
+     {
+      g_pendingDir = 0;                     // never stack setups behind an open trade
       return;
+     }
    if(g_lastSignalBar == barTime)
       return;
 
@@ -463,12 +510,47 @@ void OnTick()
       return;
    double atr = atrBuf[0];
 
+   int sig = GetSignal(atr);
+
+   // --- Pending setup: waiting for the market to prove the turn ---
+   if(g_pendingDir != 0)
+     {
+      g_pendingBars++;
+      if(sig == g_pendingDir)
+         g_pendingBars = 0;                 // extreme repeated — setup refreshed
+      else if(sig == -g_pendingDir)
+        {
+         g_pendingDir  = sig;               // opposite extreme — flip the setup
+         g_pendingBars = 0;
+        }
+      else if(SetupConfirmed(g_pendingDir))
+        {
+         int dir = g_pendingDir;
+         g_pendingDir = 0;
+         // Regime is re-checked at confirmation time; if conditions have
+         // deteriorated (spread spike, session end), drop the setup entirely.
+         if(RegimeAllowsEntry(atr))
+            TryEnter(dir, atr);
+         return;
+        }
+      if(g_pendingDir != 0 && g_pendingBars >= InpConfirmTimeoutBars)
+         g_pendingDir = 0;                  // no confirmation in time — stand down
+      return;
+     }
+
+   // --- No pending setup: look for a fresh extreme ---
+   if(sig == 0)
+      return;
    if(!RegimeAllowsEntry(atr))
       return;
 
-   int sig = GetSignal(atr);
-   if(sig != 0)
+   if(InpEntryConfirm == CONFIRM_NONE)
       TryEnter(sig, atr);
+   else
+     {
+      g_pendingDir  = sig;
+      g_pendingBars = 0;
+     }
   }
 
 //+------------------------------------------------------------------+

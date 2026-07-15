@@ -15,7 +15,7 @@
 //|  deployment.                                                     |
 //+------------------------------------------------------------------+
 #property copyright   "MIT License"
-#property version     "1.10"
+#property version     "1.11"
 #property description "Asian-range breakout at London open for XAUUSD with strict risk controls."
 
 #include <Trade\Trade.mqh>
@@ -60,6 +60,8 @@ input bool              InpFlattenOnDailyStop = true;       // Close open positi
 input double            InpMaxDrawdownPct     = 10.0;       // Hard lockout, % below equity high-water mark
 input bool              InpFlattenOnDDLock    = true;       // Close open positions when lockout triggers
 input int               InpMaxTradesPerSide   = 1;          // Max entries per direction per day
+input bool              InpAllowMinLotFallback = false;     // Small accounts: trade min lot when risk target unreachable
+input double            InpHardRiskCapPct     = 2.0;        // Max actual risk % allowed on a min-lot fallback entry
 
 input group "=== Execution guards ==="
 input int               InpMaxSpreadPoints    = 45;         // Max spread (points) to open trades
@@ -376,7 +378,25 @@ double CalcLots(const double slDistance)
 
    double lots = MathFloor(riskMoney / lossPerLot / step) * step;
    if(lots < vmin)
-      return 0.0;                      // min lot would exceed the risk target
+   {
+      // min lot would exceed the risk target: skip, unless the explicit
+      // small-account fallback is enabled AND actual risk stays under the hard cap
+      if(!InpAllowMinLotFallback)
+         return 0.0;
+      double equity = AccountInfoDouble(ACCOUNT_EQUITY);
+      if(equity <= 0)
+         return 0.0;
+      double minLotRiskPct = vmin * lossPerLot / equity * 100.0;
+      if(minLotRiskPct > InpHardRiskCapPct)
+      {
+         PrintFormat("Min-lot fallback refused: risk %.2f%% exceeds hard cap %.2f%%",
+                     minLotRiskPct, InpHardRiskCapPct);
+         return 0.0;
+      }
+      PrintFormat("Min-lot fallback: trading %.2f lots at %.2f%% actual risk (target %.2f%%)",
+                  vmin, minLotRiskPct, InpRiskPercent);
+      lots = vmin;
+   }
    if(lots > vmax)
       lots = vmax;
 

@@ -15,7 +15,7 @@
 //|  deployment.                                                     |
 //+------------------------------------------------------------------+
 #property copyright   "MIT License"
-#property version     "1.11"
+#property version     "1.12"
 #property description "Asian-range breakout at London open for XAUUSD with strict risk controls."
 
 #include <Trade\Trade.mqh>
@@ -123,7 +123,10 @@ int OnInit()
    if(!GlobalVariableCheck(g_hwmName))
       GlobalVariableSet(g_hwmName, AccountInfoDouble(ACCOUNT_EQUITY));
 
-   EventSetTimer(60);   // flat enforcement even when no ticks arrive
+   // timer is the second line of flat enforcement; tick-driven checks remain
+   // primary, so a failed timer degrades rather than disables the guarantee
+   if(!EventSetTimer(60))
+      Print("WARNING: timer unavailable - flat enforcement relies on incoming ticks only");
 
    return INIT_SUCCEEDED;
 }
@@ -341,7 +344,9 @@ void OpenTrade(const ENUM_ORDER_TYPE type, const double atrD)
    double sl = NormalizeDouble(isLong ? entry - dist : entry + dist, _Digits);
    double tp = NormalizeDouble(isLong ? entry + InpTPRR * dist : entry - InpTPRR * dist, _Digits);
 
-   double lots = CalcLots(dist);
+   // size on the SL distance padded by allowed slippage: an adverse fill
+   // must not push the realized risk past the target or the hard cap
+   double lots = CalcLots(dist + InpSlippagePoints * _Point, type);
    if(lots <= 0)
    {
       Print("Lot sizing failed or below minimum - trade skipped");
@@ -358,7 +363,7 @@ void OpenTrade(const ENUM_ORDER_TYPE type, const double atrD)
 //+------------------------------------------------------------------+
 //| Fixed-fractional sizing; skips the trade rather than oversizing  |
 //+------------------------------------------------------------------+
-double CalcLots(const double slDistance)
+double CalcLots(const double slDistance, const ENUM_ORDER_TYPE type)
 {
    double tickSize  = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_SIZE);
    double tickValue = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_VALUE);
@@ -400,13 +405,16 @@ double CalcLots(const double slDistance)
    if(lots > vmax)
       lots = vmax;
 
-   // reduce until margin fits
+   // reduce until margin fits; fail closed if margin cannot be verified
    double margin = 0.0;
-   double price  = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+   double price  = SymbolInfoDouble(_Symbol, (type == ORDER_TYPE_BUY) ? SYMBOL_ASK : SYMBOL_BID);
    while(lots >= vmin)
    {
-      if(!OrderCalcMargin(ORDER_TYPE_BUY, _Symbol, lots, price, margin))
-         break;
+      if(!OrderCalcMargin(type, _Symbol, lots, price, margin))
+      {
+         Print("Margin calculation failed - trade skipped");
+         return 0.0;
+      }
       if(margin <= AccountInfoDouble(ACCOUNT_MARGIN_FREE) * 0.9)
          break;
       lots -= step;
@@ -570,6 +578,13 @@ void CloseAllPositions(const string reason)
 //+------------------------------------------------------------------+
 void CloseStalePositions()
 {
+   // back off after a failed attempt (market still closed at day open):
+   // avoids hammering the server with hundreds of rejected requests
+   static datetime backoffUntil = 0;
+   if(TimeCurrent() < backoffUntil)
+      return;
+
+   bool failed = false;
    for(int i = PositionsTotal() - 1; i >= 0; i--)
    {
       if(!g_pos.SelectByIndex(i)) continue;
@@ -578,8 +593,13 @@ void CloseStalePositions()
       if(g_trade.PositionClose(g_pos.Ticket()))
          Print("Stale position from a previous day closed");
       else
+      {
+         failed = true;
          PrintFormat("Stale-position close failed: %s", g_trade.ResultRetcodeDescription());
+      }
    }
+   if(failed)
+      backoffUntil = TimeCurrent() + 15;
 }
 
 //+------------------------------------------------------------------+
@@ -597,7 +617,17 @@ bool SessionCloseSoon()
    for(uint s = 0; SymbolInfoSessionTrade(_Symbol, (ENUM_DAY_OF_WEEK)tm.day_of_week, s, from, to); s++)
       lastEnd = to;
    if(lastEnd <= 0)
-      return false;
+   {
+      // no schedule data (or a no-trading day): fail closed - treat as
+      // "session closing" so the EA flattens and takes no new trades
+      static bool warned = false;
+      if(!warned)
+      {
+         warned = true;
+         Print("Trade-session schedule unavailable for today - failing closed (flat mode)");
+      }
+      return true;
+   }
 
    long secOfDay = (long)TimeCurrent() % 86400;
    return secOfDay >= (long)lastEnd - (long)InpPreCloseBufferMin * 60;

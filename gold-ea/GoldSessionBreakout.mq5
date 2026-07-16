@@ -15,7 +15,7 @@
 //|  deployment.                                                     |
 //+------------------------------------------------------------------+
 #property copyright   "MIT License"
-#property version     "1.12"
+#property version     "1.13"
 #property description "Asian-range breakout at London open for XAUUSD with strict risk controls."
 
 #include <Trade\Trade.mqh>
@@ -578,9 +578,18 @@ void CloseAllPositions(const string reason)
 //+------------------------------------------------------------------+
 void CloseStalePositions()
 {
-   // back off after a failed attempt (market still closed at day open):
-   // avoids hammering the server with hundreds of rejected requests
+   // back off after a failed attempt (market still closed at day open) to
+   // avoid hammering the server - BUT clear the backoff on the first tick
+   // after the trade session opens, so the close lands on the first
+   // tradable tick instead of waiting out a pre-open backoff
    static datetime backoffUntil = 0;
+   static bool     wasOpen      = false;
+
+   bool open = IsTradeSessionOpen();
+   if(open && !wasOpen)
+      backoffUntil = 0;
+   wasOpen = open;
+
    if(TimeCurrent() < backoffUntil)
       return;
 
@@ -600,6 +609,29 @@ void CloseStalePositions()
    }
    if(failed)
       backoffUntil = TimeCurrent() + 15;
+}
+
+//+------------------------------------------------------------------+
+//| True when the current server time falls inside one of today's    |
+//| scheduled trade sessions. A day with no schedule data returns    |
+//| true: closing is the safe direction, so callers should attempt   |
+//| and let the failure backoff absorb rejections.                   |
+//+------------------------------------------------------------------+
+bool IsTradeSessionOpen()
+{
+   MqlDateTime tm;
+   TimeToStruct(TimeCurrent(), tm);
+
+   datetime from = 0, to = 0;
+   bool haveAny = false;
+   long secOfDay = (long)TimeCurrent() % 86400;
+   for(uint s = 0; SymbolInfoSessionTrade(_Symbol, (ENUM_DAY_OF_WEEK)tm.day_of_week, s, from, to); s++)
+   {
+      haveAny = true;
+      if(secOfDay >= (long)from && secOfDay < (long)to)
+         return true;
+   }
+   return !haveAny;
 }
 
 //+------------------------------------------------------------------+

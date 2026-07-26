@@ -1,0 +1,31 @@
+required_field,phase1_runtime_column,availability_status,acquisition_path,value_domain_observed,notes
+basket_uid,basket_uid,EXISTS,RUNTIME_SNAPSHOT,GOLD#<start>#<seq>#<dir>#<k>,uid variants exist for hedged baskets; canonical key = (capital,period,start_time)
+root_snapshot_id,root_snapshot_id,EXISTS,RUNTIME_SNAPSHOT,unique id,join key to overlay signals (333/333 join demonstrated)
+basket_age,basket_age_seconds,EXISTS,RUNTIME_SNAPSHOT,seconds,NA
+entry_direction,NA_direction_not_per_snapshot,JOIN_REQUIRED,JOIN_FROM_BASKET_SUMMARY_OR_UID,BUY|SELL,uid contains BUY_NET/SELL_NET; hedged uses original direction per ma_direction_mapping.csv
+entry_count,entry_count,EXISTS,RUNTIME_SNAPSHOT,int,NA
+hedge_count,hedge_count,EXISTS,RUNTIME_SNAPSHOT,int,NA
+current_floating_pl,current_basket_net_pl,EXISTS,RUNTIME_SNAPSHOT,yen(swap込/commission NA),basket_floating_profitも存在。net_plを正とする
+floating_loss,floating_loss_yen,EXISTS,RUNTIME_SNAPSHOT,yen>=0,NA
+distance_to_hardstop_yen,distance_to_hardstop_yen,EXISTS,RUNTIME_SNAPSHOT,yen,NA
+distance_band,distance_band,EXISTS,RUNTIME_SNAPSHOT,WATCH|CAUTION|DANGER|CRITICAL|HARDSTOP_NOW,domain confirmed on 20000-row sample
+loss_slope_short,loss_slope_short,**NA_ALL_ROWS_NOT_POPULATED**,DERIVED_OFFLINE_SUBSTITUTE,NA in 100% of Phase1 rows,重大ギャップ。derived_loss_slope_1minで代替。runtime実装はEA変更のため禁止
+loss_slope_mid,loss_slope_mid,**NA_ALL_ROWS_NOT_POPULATED**,DERIVED_OFFLINE_SUBSTITUTE,NA in 100% of Phase1 rows,derived_loss_slope_3min/5minで代替
+adverse_movement_speed,adverse_movement_speed,**NA_ALL_ROWS_NOT_POPULATED**,DERIVED_OFFLINE_SUBSTITUTE,NA in 100% of Phase1 rows,derived_distance_shrink_rateで代替
+max_floating_loss_so_far,NA_not_logged,DERIVED_OFFLINE,CUMMAX_OVER_SNAPSHOT_SERIES,yen,series単調処理のみ・補間なし
+time_since_last_favorable_movement,NA_not_logged,DERIVED_OFFLINE,SERIES_SCAN,seconds,改善なしの場合はbasket_age
+spread,spread_points,EXISTS,RUNTIME_SNAPSHOT,points,rapid-drop 4件でmax 50-53観測
+large_candle_proxy,large_candle_state,EXISTS,RUNTIME_SNAPSHOT,FALSE|TechnicalDanger:*,状態文字列。FALSE/非FALSEの2値化はオフラインで実施
+event_window_state,high_impact_usd_event_window_state,EXISTS,RUNTIME_SNAPSHOT,state string,UNKNOWN保持。calendar availability列と併読
+m15_reverse_warning_state,NA_runtime,OFFLINE_OVERLAY_JOIN,MA_OVERLAY_PIPELINE,per ma_signal_contract v1.1.0,runtime ma_cross_state列はEA内部定義でありEMA10/SMA20契約と別物。使用しない
+m30_adverse_regime_context,NA_runtime,OFFLINE_OVERLAY_JOIN,MA_OVERLAY_PIPELINE,BULL|BEAR|FLAT_OR_EQUAL|UNKNOWN,同上
+m5_warning_proxy_state,NA_runtime,OFFLINE_OVERLAY_JOIN,MA_OVERLAY_PIPELINE,per contract,M5_REVERSE_FOLLOWTHROUGH_PROXY命名を維持
+close_priority_state,close_priority_ok + close_priority_blocked,EXISTS,RUNTIME_SNAPSHOT,true|false,NA
+hte_eligibility,current_HTE_eligibility,EXISTS,RUNTIME_SNAPSHOT,true|false|UNKNOWN,UNKNOWNをfalse扱いしない
+recovery_eligibility,current_Recovery_eligibility,EXISTS,RUNTIME_SNAPSHOT,true|false|UNKNOWN,同上
+basketclose_eligibility,current_BasketClose_eligibility,EXISTS,RUNTIME_SNAPSHOT,true|false|UNKNOWN,同上
+pending_close_state,pending_close_state,EXISTS,RUNTIME_SNAPSHOT,NONE|other,20000行サンプルでは全てNONE
+market_state,market_state,EXISTS_BUT_CONFLATED,RUNTIME_SNAPSHOT,OPEN_OR_UNKNOWN|MARKET_CLOSED_RETRY_INACTIVE|MARKET_CLOSED_RETRY_ACTIVE,**OPEN_OR_UNKNOWNはOPENとUNKNOWNを区別不能→gateではUNKNOWN扱い(validと解釈しない)**
+hedge_phase,is_pre_hedge + is_never_hedged,EXISTS,RUNTIME_SNAPSHOT,true|false,Pre-Hedge帯定義の基礎
+timestamps,server_time + server_time_msc,EXISTS,RUNTIME_SNAPSHOT,broker time,slope導出の時間軸
+hardstop_now,hardstop_now_runtime + hardstop_now_snapshot,EXISTS,RUNTIME_SNAPSHOT,true|false,G3ゲート

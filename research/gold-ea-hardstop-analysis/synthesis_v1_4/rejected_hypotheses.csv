@@ -1,0 +1,4 @@
+hypothesis,rejection_basis,quantitative_evidence,evidence_level,source,revalidation_condition
+追加Entry増幅(grid積み増しで損失拡大),全3498イベントで main direction position が1を超えた瞬間が存在しない=追加エントリは1回も発生していない,MainDirectionPositions max=1; ENTRY rows=526(basket毎に1); combined max=2(main1+hedge1),position-level(観測上不存在),deals_v1_4.csv(SHA B6B2..4800; identity 521/521),MaxNetPositions等の設定変更時・新規runで再確認
+lot増幅(ロットスケーリングで損失拡大),発注ロットが全イベントで一定,OrderLots distinct = {0.01} on all ENTRY/HEDGE/CLOSE (1138 rows),position-level(観測上不存在),deals_v1_4.csv,lot設定変更時に再確認
+margin不足(証拠金逼迫による破綻経路),HEDGE/HS時点を含む全観測で維持率が200%に接近すらしていない; HardStopはEAのfloating-loss閾値で発火しmargin-callではない,MarginLevel@HEDGE min=2406.4%; all-events median=6545%; sub-200% count=0; (旧0.00はplaceholderと判明し解消),row-level,deals_v1_4.csv + Audit4 equity-series(min≈2700%),資金設定・lot設定変更時に再確認

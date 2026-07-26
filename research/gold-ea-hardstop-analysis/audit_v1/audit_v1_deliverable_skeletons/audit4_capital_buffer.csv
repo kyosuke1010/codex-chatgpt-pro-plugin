@@ -1,0 +1,11 @@
+metric,value_50k_pct,value_100k_pct,value_150k_pct,raw_yen,note
+worst_basket_loss_yen,-18.04,-9.02,-6.01,-9019,single worst basket final_pl (in6run)
+mean_hs_loss_yen,-9.98,-4.99,-3.33,-4991,mean of 37 in6run HardStop losses
+worst_hs_loss_yen,-18.04,-9.02,-6.01,-9019,worst single HardStop loss
+maxdd_measured_yen,60.82,32.61,NA_NO_150K_RUN,50k=30410;100k=32613,equity peak-to-trough; 150k NOT run so not directly measurable
+consecutive_hs_max_24h,NA,NA,NA,3,"max HardStops within any 24h window (in6run, n_hs=37)"
+survival_est_150k_consecutive_worst_hs,NA,NA,16.6,worst_hs=-9019,consecutive WORST-case HS to zero 150k equity (deposit/|worst_hs|); true margin-call needs XM Standard GOLD required-margin spec = EVIDENCE_UNAVAILABLE
+survival_est_150k_consecutive_mean_hs,NA,NA,30.1,mean_hs=-4991,consecutive MEAN HS to zero 150k equity
+margin_constraint_evidence_at_HS,NA,NA,NA,row_field_MISSING_43of43; equity_series margin@HS n=37 min=2701 below200%=0,hardstops.margin_level_at_hs MISSING; used equity_curve margin_level nearest-prior
+margin_constraint_evidence_at_HEDGE,NA,NA,NA,row_field_MISSING_48of48; equity_series margin@hedge n=40 min=2708 below200%=0,hedges.margin_level_at_hedge MISSING; used equity_curve nearest-prior
+expectancy_statement,NA,NA,NA,-147,capital increase does NOT change expectancy -147 yen/basket

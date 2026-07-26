@@ -1,0 +1,9 @@
+metric,value,detail
+winner_count,391,in6run BasketClose winners final_pl>0
+winner_final_pl_p50,401,
+winner_final_pl_p90,407,
+winner_final_pl_max,420,
+cap_concentration_380_420_share,0.596,233/391 winners in 380-420 yen
+post_close_favorable_move_1h/4h/24h,EVIDENCE_UNAVAILABLE,post_close_move_* MISSING 467/467 -> favorable move not computable
+winner_kill_risk,STRUCTURAL_ONLY,no quantitative counterfactual (spec §5)
+verdict_input,FAVORABLE_MOVE_UNAVAILABLE -> extension feasibility undetermined,needs post_close_move_* in v1.3+ to judge WINNER_EXTENSION_SECONDARY vs reject

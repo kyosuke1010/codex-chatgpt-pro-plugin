@@ -1,0 +1,10 @@
+gate_id,gate,required_state,unknown_handling,phase1_source_column,phase1_observed_domain,phase1_gap_note
+G3,HardStopNow,false,BLOCK_CANDIDATE,hardstop_now_runtime + hardstop_now_snapshot,true|false,両列一致を要求。不一致はUNKNOWN扱いでBLOCK
+G4,ClosePriorityOK,true,BLOCK_CANDIDATE,close_priority_ok,true|false,NA
+G5,ClosePriorityBlocked,false,BLOCK_CANDIDATE,close_priority_blocked,true|false,NA
+G6,pending_close,false(=NONE),BLOCK_CANDIDATE,pending_close_state,NONE(観測サンプル全行),NONE以外の値域はprospectiveで要観測
+G7,market_state,valid(=OPEN確定),BLOCK_CANDIDATE,market_state,OPEN_OR_UNKNOWN|MARKET_CLOSED_RETRY_INACTIVE|MARKET_CLOSED_RETRY_ACTIVE,**OPEN_OR_UNKNOWNはUNKNOWN扱い(validと解釈しない)。Phase1ログではG7を確定通過できるSnapshotが存在しない=candidate_possible判定は現行ログでは常にUNKNOWN側へ倒れる。prospective収集でも同様であり、これは安全側の既知制約として受容する**
+G8,HTE_eligibility,false_and_known,BLOCK_CANDIDATE,current_HTE_eligibility,true|false|UNKNOWN,後発eligible化(HTE Kill -20円型)はG8では防げない。persistence診断で層別し残余リスクとして監査
+G9,Recovery_eligibility,false_and_known,BLOCK_CANDIDATE,current_Recovery_eligibility,true|false|UNKNOWN,NA
+G10,BasketClose_eligibility,false_and_known,BLOCK_CANDIDATE,current_BasketClose_eligibility,true|false|UNKNOWN,後発eligible化(BC Kill 26件型)はG10では防げない。同上
+GX1,candidate_possible,ALL_GATES_TRUE_AND_KNOWN,NEVER_COERCE_UNKNOWN_TO_FALSE_OR_TRUE,derived,true|false|UNKNOWN,UNKNOWNを含む場合candidate_possible=UNKNOWN(falseにもtrueにもしない)。分類のみで行動なし

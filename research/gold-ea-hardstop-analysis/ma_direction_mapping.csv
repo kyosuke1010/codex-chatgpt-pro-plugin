@@ -1,0 +1,8 @@
+basket_direction,hedge_state,reference_direction,adverse_cross,favorable_cross,regime_adverse_m30,notes
+BUY,PRE_HEDGE,BUY,BEAR_CROSS,BULL_CROSS,BEAR_REGIME,original direction basis
+BUY,POST_HEDGE,BUY,BEAR_CROSS,BULL_CROSS,BEAR_REGIME,hedged basket keeps ORIGINAL basket direction as reference
+SELL,PRE_HEDGE,SELL,BULL_CROSS,BEAR_CROSS,BULL_REGIME,original direction basis
+SELL,POST_HEDGE,SELL,BULL_CROSS,BEAR_CROSS,BULL_REGIME,hedged basket keeps ORIGINAL basket direction as reference
+UNKNOWN,ANY,DIRECTION_UNKNOWN,NOT_EVALUATED,NOT_EVALUATED,NOT_EVALUATED,do NOT coerce; record DIRECTION_UNKNOWN and exclude from adverse stats
+BUY,HEDGE_STATE_UNKNOWN,BUY,BEAR_CROSS,BULL_CROSS,BEAR_REGIME,adverse mapping unaffected by hedge state; hedge_state recorded as UNKNOWN
+SELL,HEDGE_STATE_UNKNOWN,SELL,BULL_CROSS,BEAR_CROSS,BULL_REGIME,adverse mapping unaffected by hedge state; hedge_state recorded as UNKNOWN

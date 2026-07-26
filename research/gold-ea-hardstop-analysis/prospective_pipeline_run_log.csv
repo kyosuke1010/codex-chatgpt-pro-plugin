@@ -1,0 +1,21 @@
+step,check,status,detail
+1,input_presence_and_sha256,PASS,3 files
+2,extract,PASS,1 archives
+3,rediscover_root_snapshot(shadow_on),PASS,2 logs
+4,rediscover_basket_summary(embedded),PASS,MULTILAYER_BASKET_SUMMARY within shadow-on logs
+5,rediscover_run_summary(embedded),PASS,MULTILAYER_RUN_SUMMARY within shadow-on logs
+6,rediscover_trade_events,PASS,4 files
+7,schema_validation,PASS,"83-col schema, all required present"
+8,ea_identity_source_before_sha256,PASS,matches in-sample 1353718F
+9,window_match_halfopen_June,PASS,FromDate=2026.06.01 ToDate=2026.06.30
+10,deposit_symbol_tf_model_match,PASS,"deposits=['100000', '50000'] symbol/tf/model ok=True"
+11,prehedge_feature_generation,PASS,84 baskets
+12,loss_slope_1_3_5min_derivation,PASS,missing_rate=0.357
+13,distance_shrink_rate_derivation,PASS,
+14,rapid_drop_trigger_eval,PASS,fired=14
+15,ma_overlay_join,PENDING_OVERLAY_INPUT,June bundle ships no M5/M15/M30 bars; EMA10/SMA20 overlay (Q2/Q4/Q5) deferred
+16,event_window_stratification,PASS,hardstops_with_event_window=0/6
+17,non_intervention_off_vs_on,PASS,2 capital arms
+18,Q1_Q6_analysis,PARTIAL,Q1/Q3/Q6 computed; Q2/Q4/Q5 pending overlay bars
+18.5,sufficiency_check,NOT_MET,"hs=6(hed=6,non=0) bc=76"
+19,final_decision,PREHEDGE_SLOPE_SIGNAL_MORE_DATA_REQUIRED,

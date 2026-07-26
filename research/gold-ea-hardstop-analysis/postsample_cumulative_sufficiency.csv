@@ -1,0 +1,5 @@
+criterion,required,observed,met
+cumulative_hardstop,>=15,6,False
+cumulative_nonhedged_hardstop,>=2,0,False
+hardstop_slope_missing_rate,<=0.3,0.000,True
+non_intervention_all_windows,PASS,True,True

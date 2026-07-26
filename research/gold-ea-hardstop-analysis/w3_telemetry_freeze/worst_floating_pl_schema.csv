@@ -1,0 +1,12 @@
+column,type,unit,nullable,missing_sentinel,description,note
+w3_event,string,-,no,-,W3_WORST_UPDATE(更新時)。最終値はW3_HEDGE_TIMING/W3_CLOSE_ANCHOR行にも同載,-
+worst_floating_pl_yen,double,yen,no,-,basket生涯running-min(負値),Runtime保持はメモリ1変数のみ
+worst_time_msc,int64,msec,no,-,worst記録時刻,-
+price_at_worst_bid,double,price,yes,MISSING,worst時Bid,-
+price_at_worst_ask,double,price,yes,MISSING,worst時Ask,-
+phase_at_worst,string,-,no,-,PRE_HEDGE|POST_HEDGE|UNKNOWN(UNKNOWNをfalse/PRE扱いしない),M1のpre-hedge損傷判定に直結
+positions_at_worst_main,int,count,yes,MISSING,worst時main position数,-
+positions_at_worst_hedge,int,count,yes,MISSING,worst時hedge position数,-
+update_threshold_yen,double,yen,no,-,固定250(既録worstから250円以上悪化した時のみUPDATE行を出す。行数制御。閾値はログ密度の定数でありEA挙動に影響しない),volume bound
+prior_worst_yen,double,yen,yes,MISSING,直前まで記録していたworst(更新幅の検算用),-
+recovery_from_worst_at_close_yen,double,yen,yes,MISSING,W3_CLOSE_ANCHOR同載: final_pl - worst_floating_pl(worstからの回復量。give-back/回復の定量),M1 giveback定量

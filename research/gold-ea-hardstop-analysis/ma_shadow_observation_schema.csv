@@ -1,0 +1,36 @@
+field_name,type,unit,allowed_values,nullable,description
+observation_id,string,NA,unique,no,観測行の一意ID(pipeline採番)
+basket_uid,string,NA,NA,no,Basket一意ID(Basket Summaryと結合キー)
+root_snapshot_id,string,NA,NA,no,available_timeに対応するRuntime Snapshot ID
+run_id,string,NA,NA,no,テスターrun識別子(6run)
+capital_group,string,NA,NA,no,資本グループ識別子
+reason_code,string,NA,see ma_shadow_reason_dictionary.csv,no,Shadow分類コード(辞書外の値は禁止)
+signal_time,datetime,broker_time,NA,no,source barのclose時刻(=Signal成立時刻)
+source_timeframe,string,NA,M5|M15|M30,no,Signal元タイムフレーム
+source_bar_open,datetime,broker_time,NA,no,source barのopen時刻
+source_bar_close,datetime,broker_time,NA,no,source barのclose時刻
+available_time,datetime,broker_time,NA,yes,bar close後最初のSnapshot時刻(CENSORED時はnull)
+availability_lag_sec,int,seconds,>=0,yes,available_time - source_bar_close
+basket_lifecycle,string,NA,OPEN|HEDGED|RECOVERING|CLOSING|CLOSED|UNKNOWN,no,Signal時点のBasketライフサイクル
+hedge_phase,string,NA,PRE_HEDGE|POST_HEDGE|UNKNOWN,no,Signal時点のHedge前後区分
+basket_direction,string,NA,BUY|SELL|DIRECTION_UNKNOWN,no,original basket direction
+pl_at_signal_yen,decimal,JPY,NA,yes,available_time SnapshotのBasket P/L(swap込/commission NA)
+distance_to_hardstop_yen,decimal,JPY,NA,yes,Signal時点のHardStop閾値までの残余距離
+hardstop_now_flag,bool,NA,true|false|UNKNOWN,no,Signal時点でHardStop条件成立中か
+hte_eligible,string,NA,true|false|UNKNOWN,no,Signal時点のHTE eligibility(UNKNOWNをfalse扱い禁止)
+recovery_eligible,string,NA,true|false|UNKNOWN,no,Signal時点のRecovery eligibility
+basketclose_eligible,string,NA,true|false|UNKNOWN,no,Signal時点のBasketClose eligibility
+close_priority_ok,string,NA,true|false|UNKNOWN,no,ClosePriority整合フラグ
+pending_close_flag,string,NA,true|false|UNKNOWN,no,Signal時点で既存close要求が保留中か
+event_window_state,string,NA,IN_WINDOW|OUT_OF_WINDOW|UNKNOWN,no,Event Window状態(UNKNOWN保持)
+m30_regime,string,NA,BULL_REGIME|BEAR_REGIME|FLAT_OR_EQUAL|UNKNOWN,no,Signal時点のM30 regime
+m5_proxy_state,string,NA,PROXY_CONFIRMED|PROXY_ABSENT|UNKNOWN,no,M5_REVERSE_FOLLOWTHROUGH_PROXY状態
+is_primary_signal,bool,NA,true|false,no,Basket×familyのFirst Signalか
+persistence_bars,int,bars,0|1|2|3,yes,latch後のadverse継続closed bar数(3で打ち切り)
+recross_flag,bool,NA,true|false,no,original方向へのrecross発生
+censored_flag,bool,NA,true|false,no,SIGNAL_CENSOREDか
+gap_after_market_close,bool,NA,true|false,no,市場閉鎖明けバー由来か
+actual_final_reason,string,NA,HARDSTOP|HTE|RECOVERY_CLOSE|BASKET_CLOSE|OTHER|UNRESOLVED,yes,Basket実際の終了理由(Basket Summary由来)
+actual_final_pl_yen,decimal,JPY,NA,yes,Basket実際の最終P/L(swap込/commission NA)
+contract_version,string,NA,semver,no,ma_signal_contract.mdのバージョン
+data_source,string,NA,OFFLINE_OVERLAY,no,常にOFFLINE_OVERLAY(Runtime由来MA禁止)

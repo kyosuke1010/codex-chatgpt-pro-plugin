@@ -1,0 +1,13 @@
+column,type,unit,nullable,missing_sentinel,description,mechanism_link
+w3_event,string,-,no,-,W3_HEDGE_TIMING(hedge約定確定直後)| W3_HEDGE_EVAL(hedge条件評価時・非発動含む),M1/M2
+floating_loss_yen_at_event,double,yen,yes,MISSING,評価/約定時点のbasket floating loss(負値),M1/M2
+hardstop_threshold_yen_active,double,yen,yes,MISSING,同時点の有効HS閾値,M1/M2
+distance_to_hs_yen,double,yen,yes,MISSING,threshold - |floating_loss|(残余耐久yen。負=既に超過),M1 hedge_too_late
+distance_to_hs_price,double,price,yes,MISSING,HS発火までの価格距離換算(現行lot/方向でのyen→price換算。換算不能時MISSING),M1 hedge_too_late
+worst_floating_pl_so_far,double,yen,yes,MISSING,この時点までのbasket生涯最悪floating(T3 running-min転記),M1/M2経路
+time_since_open_sec,int64,sec,yes,MISSING,basket開始からの経過秒,M1(長期)/M2(高速)分離
+time_since_worst_sec,int64,sec,yes,MISSING,worst記録時点からの経過秒(worst後の回復/再悪化位相),M1
+hedge_fired,string,-,no,-,TRUE|FALSE|UNKNOWN(EVAL行はFALSE/UNKNOWN可。UNKNOWNをfalse扱いしない),M2 hedge不発
+hedge_block_reason_copy,string,-,yes,MISSING,既存DefenseHedgeBlockReasonの転記(評価ロジック非接触・観測のみ),M2 hedge不発
+hedge_order_ticket,string,-,yes,MISSING,W3_HEDGE_TIMING行のみ: 約定ticket(既存hedge処理の結果を参照),照合用
+eval_throttle_note,string,-,yes,MISSING,W3_HEDGE_EVAL行の記録条件: 評価結果が前回行から変化した時+distance_to_hs_yenが前回行から500円以上変化した時のみ記録(行数制御),運用

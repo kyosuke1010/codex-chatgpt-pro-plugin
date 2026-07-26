@@ -1,0 +1,7 @@
+question,hypothesis,insample_reference,prospective_result,verdict
+Q1,rapid-drop pre-hedge slope separation reproduces,HS_p50=0.145 OTHER_p50=0.021,HS_p50=0.1060(n=6) OTHER_p50=0.0049(n=48),DIRECTIONALLY_REPRODUCED
+Q2,pre-hedge MA warning stays harm-excess,M15=-10258 M5=-41538,PENDING_OVERLAY_INPUT(no bars shipped),PENDING
+Q3,slope+shrink separates shallow vs deep adverse,~7x median gap,~22x median gap,DESCRIPTIVE_ONLY_LOW_N
+Q4,BC-kill vs HardStop difference,BC-kill(pre-hedge M15)=26,PENDING_OVERLAY_INPUT(MA warning needs bars),PENDING
+Q5,HTE late-eligibility observable,1/-20yen,NO_HTE_CLOSE_IN_JUNE(all baskets basket-close/hardstop),NO_EVENT
+Q6,event window auxiliary only,hs_pm60_share=2/37,hardstops_in_event_window=0/6,EVENT_NOT_PRIMARY_CONSISTENT

@@ -1,0 +1,13 @@
+artifact_id,artifact_name,expected_type,per_run,required,expected_content_signature,role,status
+PX01,EA source (.mq5),MQL5 source,shared,true,sha256==e57be003...,identity guard (must be unchanged),AWAITING_PUSH
+PX02,EA compiled (.ex5),EX5 binary,shared,true,sha256==49b31402...,identity guard (must be unchanged),AWAITING_PUSH
+PX03,Root Snapshot CSV (Shadow ON),CSV,per ON run,true,event_type in {MULTILAYER_ROOT_SNAPSHOT...} header matches Phase1 shadow log,pre-hedge feature source,AWAITING_PUSH
+PX04,Basket Summary CSV,CSV,per ON run,true,MULTILAYER_BASKET_SUMMARY rows OR basket_master_table columns,basket outcome / actual_class,AWAITING_PUSH
+PX05,Run Summary CSV,CSV,per ON run,true,MULTILAYER_RUN_SUMMARY row(s),run-level totals,AWAITING_PUSH
+PX06,Trade Events CSV,CSV,per arm,true,KOUCHA_GOLD_KIWAMI_TRADE_EVENTS columns,non-intervention fingerprint,AWAITING_PUSH
+PX07,Tester report (.htm),HTML,per run,true,MT5 tester report,run provenance / dates,AWAITING_PUSH
+PX08,Agent/Expert logs,log,per run,false,terminal/agent window logs,diagnostics,AWAITING_PUSH
+PX09,Input set (.ini),config,per run,true,Tester+TesterInputs; FromDate=2026.06.01 ToDate=2026.06.30,window/deposit/model guard,AWAITING_PUSH
+PX10,Trade Events CSV (Shadow OFF),CSV,per OFF run,true,same schema as PX06 for ML_B_SHADOW_OFF,non-intervention OFF baseline,AWAITING_PUSH
+PX11,MA Overlay bars M5/M15/M30,OHLC CSV,shared,true_for_W2_July,gold_rates_M5/M15/M30[_with_ma] covering the window,offline MA overlay join enabling Q2/Q4,REQUIRED_FROM_JULY_W2
+PX12,run manifest / sha,CSV,shared,true,file,size,sha256,transfer integrity,AWAITING_PUSH

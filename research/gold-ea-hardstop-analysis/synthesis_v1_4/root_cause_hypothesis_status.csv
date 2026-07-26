@@ -1,0 +1,10 @@
+hypothesis_id,hypothesis,status,evidence_level,key_evidence,source_audit,scope_caveat
+H1,追加Entry増幅がHardStop損失を拡大,REJECTED,position-level,MainDirectionPositions max=1 over all 3498 events; add-entry never occurred,Audit2 v1.4,本8run・本設定に限る(MaxNetPositions変更時は再検証)
+H2,lot増幅がHardStop損失を拡大,REJECTED,position-level,OrderLots=0.01 constant on all ENTRY/HEDGE/CLOSE,Audit2 v1.4,同上
+H3,margin不足が破綻経路,REJECTED,row-level,MarginLevel@HEDGE min 2406% / median 6545%; no sub-200% ever; HS is floating-loss triggered,Audit2 v1.4 + Audit4,placeholder 0.00は解消済み
+H4,hedged long-duration one-way drift,REMAINING_PRIMARY,basket+position-level,32/43 HS; dwell median 141h; pl@hedge median -3169 pre-hedge dominant; frozen legs gross ±34522 vs net -4018,Audit2 v1.4 + Audit3,timing判定は distance_to_hs_price 欠損で未確定
+H5,non-hedged rapid adverse move,REMAINING_PRIMARY,basket-level,11/43 HS; dwell median 0.63h; single leg -3825; SIG-RD 11/11 fired pre-HS,Audit2 + Audit1 v1.3,hedge不発理由は telemetry 欠損で未確定
+H6,HardStop threshold/timing が左裾深さを支配,REMAINING_CROSS_CUTTING,basket-level,両原型の loss median ほぼ同一(-3746 vs -3825)で経路非依存; hs_loss分布 -3.7k..-9019 vs threshold 8000 の関係未計測,Audit2 + Audit4,threshold到達時の距離/滑り telemetry なし
+H7,hedgeが損失を縮小する,NOT_SUPPORTED,position-level,hedgeは净損失を凍結するのみ; hedged/non-hedged の hs_loss median 同等; post-hedge回復はgivebackで終わる,Audit3 + Audit2 v1.4,hedge_too_late 判定は P2 telemetry 待ち
+H8,winner延長で期待値改善,UNDETERMINED,evidence-unavailable,post_close_move_1h/4h/24h 全MISSING; cap 380-420円=59.6%は確定,Audit5,W3 telemetry で判定可能になる
+H9,SIG-RDはHardStopのprecursor,CONFIRMED_AS_WARNING,basket-level(v1.3),pooled recall 0.884 / precision 0.256 / lead median 3.6days; Exit条件ではなく early warning,Audit1 v1.3,precision_margin>0 は break-even診断のみ

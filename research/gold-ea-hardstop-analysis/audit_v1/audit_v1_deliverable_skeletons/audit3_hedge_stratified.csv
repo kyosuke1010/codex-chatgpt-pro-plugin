@@ -1,0 +1,7 @@
+stratum,group,n,hs_loss_median,stratifier,low_n_flag,tag
+SHALLOW_at_hedge(pl>=median),HEDGED,13,-3297,basket_pl_at_hedge (worst_floating_pl MISSING),,in-sample diagnostic only
+DEEP_at_hedge(pl<median),HEDGED,13,-7572,basket_pl_at_hedge (worst_floating_pl MISSING),,in-sample diagnostic only
+ALL,HEDGED,26,-3746,NA,,in-sample diagnostic only
+ALL,NON_HEDGED,11,-3825,NA,,in-sample diagnostic only
+TIMING,HEDGED,26,recovery_room=26;no_recovery=0;hedge_too_late=NOT_COMPUTABLE(distance_MISSING),post_hedge_max_recovery_pl vs basket_pl_at_hedge,,in-sample diagnostic only
+MW_TEST,H_vs_N,"H=26,N=11",H_med=-3746 vs N_med=-3825,Mann-Whitney: MW_SKIPPED_NO_SCIPY (medians reported),,in-sample diagnostic only

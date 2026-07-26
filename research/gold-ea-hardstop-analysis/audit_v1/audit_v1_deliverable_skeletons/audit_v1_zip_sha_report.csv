@@ -1,0 +1,4 @@
+zip,sha256,sha_match,role
+extraction_bundle_v1_2.zip,NOT_PLACED,AWAITING,expected
+extraction_bundle_v1_1.zip,NOT_PLACED,AWAITING,expected
+extraction_bundle_v1.zip,NOT_PLACED,AWAITING,expected

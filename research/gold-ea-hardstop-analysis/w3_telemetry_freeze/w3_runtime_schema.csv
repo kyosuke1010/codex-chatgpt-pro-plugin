@@ -1,0 +1,16 @@
+column,type,unit,nullable,missing_sentinel,description
+w3_schema_version,string,-,no,-,固定 W3.1(列変更時はW3.2として別凍結)
+run_id,string,-,no,-,実行run識別子(既存run_id規約と同一)
+basket_uid,string,-,no,-,GOLD#basket_start_token#basket_sequence(v1.3結合規約と同一)
+w3_event,string,-,no,-,W3_HEDGE_TIMING|W3_HEDGE_EVAL|W3_HS_DETECT|W3_HS_SEND|W3_HS_FILL|W3_HS_BASKET_SUMMARY|W3_WORST_UPDATE|W3_CLOSE_ANCHOR|W3_LOGGER_STATUS
+server_time_msc,int64,msec epoch,no,-,イベント時サーバ時刻(msc)
+tester_time,string,ISO8601,no,-,テスター時刻
+bid,double,price,no,-,イベント時Bid
+ask,double,price,no,-,イベント時Ask
+phase,string,-,no,-,PRE_HEDGE|POST_HEDGE(hedge約定確定を境界とする。UNKNOWN許容・false扱い禁止)
+positions_main,int,count,no,-,イベント時main方向ポジション数(現行仕様上0|1)
+positions_hedge,int,count,no,-,イベント時defense hedgeポジション数(現行仕様上0|1)
+floating_pl_yen,double,yen,yes,MISSING,イベント時basket floating P/L
+hardstop_threshold_yen_active,double,yen,yes,MISSING,イベント時点の有効HardStop閾値
+logger_fail_count,int,count,no,-,前回行以降のW3書き込み失敗累積(failure isolation証跡)
+payload_1..payload_N,mixed,-,yes,MISSING,w3_event毎の固有列(T1/T2/T3/T4スキーマ参照。全w3_eventの固有列を横持ちし非該当はMISSING)

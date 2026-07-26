@@ -1,0 +1,3 @@
+window_id,label,status,baskets,hardstop,hardstop_hedged,hardstop_nonhedged,ma_bars_present,ea_identity,window_match,non_intervention
+W1,JUNE_2026,INGESTED,84,6,6,0,False,PASS,PASS,PASS
+W2,JULY_2026,AWAITING_BUNDLE,0,0,0,0,False,NA,NA,NA

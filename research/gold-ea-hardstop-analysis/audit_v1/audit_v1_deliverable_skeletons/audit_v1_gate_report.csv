@@ -1,0 +1,9 @@
+check,status,detail
+zip_sha_verification,PASS,v1 F9F1.. v1.1 DA8B.. v1.2 5FE9.. all match pins
+july_contamination_scan,PASS,root_snapshot_rows_excluded_at_or_after_2026-07-01=0; no July
+close_reason_baseline_match,PASS,in6run win=391/442=0.885; pooled 467/526=0.888 (~0.89)
+sig_ma_rd_overlap_match_pooled,PASS,observed pooled SIG-MA=33 SIG-RD=106 both=24 == reported
+sig_lsb_definition,UNKNOWN_EXCLUDED,SIG-LSB not implemented (definition source unavailable); run 3-signal
+scope_decision,THREE_SCOPE_SPLIT,in6run(in-sample) / june_post / pooled per user decision
+coverage_scoped_denominator,PASS,scoped SIG-SLP=513; excluded 13 = the 13 HardStops without pre-hedge snapshot coverage
+june_post_hardstop_linkage,NOTE_LIMITATION,all 6 june_post HardStops fall in excluded-13 (hedged-variant basket_id linkage) -> june_post HardStop precision/recall NOT computable in this bundle

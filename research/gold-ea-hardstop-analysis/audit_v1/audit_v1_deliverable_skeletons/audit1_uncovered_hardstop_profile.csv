@@ -1,0 +1,4 @@
+scope,uncovered_hardstops,of_total_hardstops,hedged,non_hedged,hs_loss_median,entry_to_hs_min_median,note
+in6run,0,37,0,0,NA,NA,HardStops with no pre-hedge SIG-MA/RD/SLP fire (coverage gap)
+june_post,0,6,0,0,NA,NA,HardStops with no pre-hedge SIG-MA/RD/SLP fire (coverage gap)
+pooled,0,43,0,0,NA,NA,HardStops with no pre-hedge SIG-MA/RD/SLP fire (coverage gap)
